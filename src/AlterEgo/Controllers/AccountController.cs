@@ -1,16 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using AlterEgo.Data;
+using AlterEgo.Models;
+using AlterEgo.Models.AccountViewModels;
+using AlterEgo.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using AlterEgo.Models;
-using AlterEgo.Models.AccountViewModels;
-using AlterEgo.Services;
 
 namespace AlterEgo.Controllers
 {
@@ -22,19 +23,22 @@ namespace AlterEgo.Controllers
         private readonly IEmailSender _emailSender;
         private readonly ISmsSender _smsSender;
         private readonly ILogger _logger;
+        private readonly ApplicationDbContext _context;
 
         public AccountController(
             UserManager<ApplicationUser> userManager,
             SignInManager<ApplicationUser> signInManager,
             IEmailSender emailSender,
             ISmsSender smsSender,
-            ILoggerFactory loggerFactory)
+            ILoggerFactory loggerFactory,
+            ApplicationDbContext context)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _emailSender = emailSender;
             _smsSender = smsSender;
             _logger = loggerFactory.CreateLogger<AccountController>();
+            _context = context;
         }
 
         //
@@ -67,18 +71,15 @@ namespace AlterEgo.Controllers
                 }
                 if (result.RequiresTwoFactor)
                 {
-                    return RedirectToAction(nameof(SendCode), new { ReturnUrl = returnUrl, RememberMe = model.RememberMe });
+                    return RedirectToAction(nameof(SendCode), new { ReturnUrl = returnUrl, model.RememberMe });
                 }
                 if (result.IsLockedOut)
                 {
                     _logger.LogWarning(2, "User account locked out.");
                     return View("Lockout");
                 }
-                else
-                {
-                    ModelState.AddModelError(string.Empty, "Invalid login attempt.");
-                    return View(model);
-                }
+                ModelState.AddModelError(string.Empty, "Invalid login attempt.");
+                return View(model);
             }
 
             // If we got this far, something failed, redisplay form
@@ -182,14 +183,11 @@ namespace AlterEgo.Controllers
             {
                 return View("Lockout");
             }
-            else
-            {
-                // If the user does not have an account, then ask the user to create an account.
-                ViewData["ReturnUrl"] = returnUrl;
-                ViewData["LoginProvider"] = info.LoginProvider;
-                var email = info.Principal.FindFirstValue(ClaimTypes.Email);
-                return View("ExternalLoginConfirmation", new ExternalLoginConfirmationViewModel { Email = email });
-            }
+            // If the user does not have an account, then ask the user to create an account.
+            ViewData["ReturnUrl"] = returnUrl;
+            ViewData["LoginProvider"] = info.LoginProvider;
+            var email = info.Principal.FindFirstValue(ClaimTypes.Email);
+            return View("ExternalLoginConfirmation", new ExternalLoginConfirmationViewModel { Email = email });
         }
 
         //
@@ -207,19 +205,52 @@ namespace AlterEgo.Controllers
                 {
                     return View("ExternalLoginFailure");
                 }
-                var user = new ApplicationUser { UserName = model.Email, Email = model.Email };
+
+                // Get some information from the external auth
+                var accessToken = info.AuthenticationTokens.Single(x => x.Name.Equals("access_token")).Value;
+                var accessTokenExpiry = info.AuthenticationTokens.Single(x => x.Name.Equals("expires_at")).Value;
+                var battleTag = info.Principal.Claims.Single(c => c.Type.Equals(ClaimTypes.Name)).Value;
+
+                var battleTagNoId = battleTag.Split('#')[0];
+
+                var user = new ApplicationUser { UserName = battleTagNoId, Email = model.Email };
+
+                var claims = new List<Claim>
+                {
+                    new Claim("BattleTag", battleTag),
+                    new Claim("BattleNetAccessToken", accessToken),
+                    new Claim("BattleNetAccessTokenExpiry", accessTokenExpiry)
+                };
+
                 var result = await _userManager.CreateAsync(user);
                 if (result.Succeeded)
                 {
                     result = await _userManager.AddLoginAsync(user, info);
                     if (result.Succeeded)
                     {
-                        await _signInManager.SignInAsync(user, isPersistent: false);
+                        // Add claims
+                        await _userManager.AddClaimsAsync(user, claims);
+
+                        await _signInManager.SignInAsync(user, false);
                         _logger.LogInformation(6, "User created an account using {Name} provider.", info.LoginProvider);
                         return RedirectToLocal(returnUrl);
                     }
                 }
                 AddErrors(result);
+
+                // Get user's characters
+                // Get characters
+                var characters = await _context.Characters.Include(x => x.CharacterClass).Include(x => x.CharacterRace).Where(c => c.Player == user).ToListAsync();
+                if (characters == null || !characters.Any())
+                {
+                    characters = await BattleNetApi.GetUserCharacters(accessToken);
+
+                    characters.ForEach(c => c.Player = user);
+                    characters.ForEach(c => c.CharacterRace = _context.Races.SingleOrDefault(r => r.Id == c.Race));
+                    characters.ForEach(c => c.CharacterClass = _context.Classes.SingleOrDefault(cl => cl.Id == c.Class));
+                    _context.Characters.AddRange(characters);
+                    await _context.SaveChangesAsync();
+                }
             }
 
             ViewData["ReturnUrl"] = returnUrl;
@@ -315,12 +346,12 @@ namespace AlterEgo.Controllers
             if (user == null)
             {
                 // Don't reveal that the user does not exist
-                return RedirectToAction(nameof(AccountController.ResetPasswordConfirmation), "Account");
+                return RedirectToAction(nameof(ResetPasswordConfirmation), "Account");
             }
             var result = await _userManager.ResetPasswordAsync(user, model.Code, model.Password);
             if (result.Succeeded)
             {
-                return RedirectToAction(nameof(AccountController.ResetPasswordConfirmation), "Account");
+                return RedirectToAction(nameof(ResetPasswordConfirmation), "Account");
             }
             AddErrors(result);
             return View();
@@ -386,7 +417,7 @@ namespace AlterEgo.Controllers
                 await _smsSender.SendSmsAsync(await _userManager.GetPhoneNumberAsync(user), message);
             }
 
-            return RedirectToAction(nameof(VerifyCode), new { Provider = model.SelectedProvider, ReturnUrl = model.ReturnUrl, RememberMe = model.RememberMe });
+            return RedirectToAction(nameof(VerifyCode), new { Provider = model.SelectedProvider, model.ReturnUrl, model.RememberMe });
         }
 
         //
@@ -429,11 +460,8 @@ namespace AlterEgo.Controllers
                 _logger.LogWarning(7, "User account locked out.");
                 return View("Lockout");
             }
-            else
-            {
-                ModelState.AddModelError(string.Empty, "Invalid code.");
-                return View(model);
-            }
+            ModelState.AddModelError(string.Empty, "Invalid code.");
+            return View(model);
         }
 
         #region Helpers
@@ -457,10 +485,7 @@ namespace AlterEgo.Controllers
             {
                 return Redirect(returnUrl);
             }
-            else
-            {
-                return RedirectToAction(nameof(HomeController.Index), "Home");
-            }
+            return RedirectToAction(nameof(HomeController.Index), "Home");
         }
 
         #endregion

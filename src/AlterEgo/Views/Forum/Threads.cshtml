@@ -1,0 +1,95 @@
+﻿@model AlterEgo.Models.ForumViewModels.ThreadsViewModel
+
+@{
+    ViewBag.Title = Model.Forum.Name;
+}
+
+<div class="row">
+    <div class="col-lg-12">
+        <ol class="breadcrumb">
+            <li><a asp-controller="Home" asp-action="Index">Alter Ego</a></li>
+            <li><a asp-controller="Forum" asp-action="Index">Forum</a></li>
+            <li class="active">@Model.Forum.Category.Name</li>
+        </ol>
+
+        <h2 class="page-header">
+            @ViewBag.Title
+        </h2>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-12">
+        <span class="pull-right">
+            <a asp-controller="Forum" asp-action="NewThread" asp-route-id="@Model.Forum.ForumId" class="btn btn-default">Start New Thread</a>
+        </span>
+    </div>
+</div>
+
+<hr />
+
+<div class="row">
+    <div class="col-lg-12">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th class="col-lg-5">Subject</th>
+                    <th class="col-lg-2">Author</th>
+                    <th class="col-lg-1">Replies</th>
+                    <th class="col-lg-1">Views</th>
+                    <th class="col-lg-3 text-right">Last Poster</th>
+                </tr>
+            </thead>
+            <tbody>
+            @foreach (var thread in Model.Threads)
+            {
+                <tr>
+                    <td>
+                        @if (thread.IsStickied) { @Html.Raw("<span class=\"label label-default\">Sticky</span>") }
+                        <a asp-controller="Forum" asp-action="Thread">@thread.Name</a>
+                    </td>
+                    <td>@thread.AuthorUserId</td>
+                    <td>4658</td>
+                    <td>153351</td>
+                    <td class="text-right">Karantor#2228 @DateTime.Now.ToString("d")</td>
+                </tr>
+            }
+            <tr>
+                <td><span class="label label-default">Sticky</span> <a href="">General Tech Thread</a></td>
+                <td>Karantor#2228</td>
+                <td>4658</td>
+                <td>153351</td>
+                <td class="text-right">Karantor#2228 @DateTime.Now.ToString("d")</td>
+            </tr>
+            <tr>
+                <td>
+                    <span class="label label-default">Sticky</span>
+                    <a href="">General Tech Thread</a>
+                    <span class="pull-right label label-default">
+                            <i class="fa fa-lock"></i>
+                        </span>
+                </td>
+                <td>Karantor#2228</td>
+                <td>4658</td>
+                <td>153351</td>
+                <td class="text-right">Karantor#2228 @DateTime.Now.ToString("d")</td>
+            </tr>
+            <tr>
+                <td><a href="">General Tech Thread</a> <span class="label label-default pull-right"><i class="fa fa-lock"></i></span></td>
+                <td>Karantor#2228</td>
+                <td>4658</td>
+                <td>153351</td>
+                <td class="text-right">Karantor#2228 @DateTime.Now.ToString("d")</td>
+            </tr>
+
+            <tr>
+                <td><a href="">General Tech Thread</a></td>
+                <td>Karantor#2228</td>
+                <td>4658</td>
+                <td>153351</td>
+                <td class="text-right">Karantor#2228, at @DateTime.Now.ToString("d")</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>

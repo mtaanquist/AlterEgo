@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -9,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using AlterEgo.Models;
 using AlterEgo.Models.ManageViewModels;
 using AlterEgo.Services;
+using AlterEgo.Data;
 
 namespace AlterEgo.Controllers
 {
@@ -20,19 +19,26 @@ namespace AlterEgo.Controllers
         private readonly IEmailSender _emailSender;
         private readonly ISmsSender _smsSender;
         private readonly ILogger _logger;
+        private readonly ApplicationDbContext _context;
+        private readonly BattleNetDbHelper _battleNetDbHelper;
 
         public ManageController(
         UserManager<ApplicationUser> userManager,
         SignInManager<ApplicationUser> signInManager,
         IEmailSender emailSender,
         ISmsSender smsSender,
-        ILoggerFactory loggerFactory)
+        ILoggerFactory loggerFactory,
+        ApplicationDbContext context,
+        BattleNetDbHelper battleNetDbHelper
+        )
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _emailSender = emailSender;
             _smsSender = smsSender;
             _logger = loggerFactory.CreateLogger<ManageController>();
+            _context = context;
+            _battleNetDbHelper = battleNetDbHelper;
         }
 
         //
@@ -54,13 +60,22 @@ namespace AlterEgo.Controllers
             {
                 return View("Error");
             }
+
+            var accessToken = User.Claims.SingleOrDefault(x => x.Type.Equals("BattleNetAccessToken")).Value;
+            var characters = await BattleNetApi.GetUserCharacters(accessToken);
+            characters.ForEach(c => c.Player = user);
+
+            // Update the stored characters in the database
+            await _battleNetDbHelper.UpdateStoredCharactersAsync(characters, user);
+
             var model = new IndexViewModel
             {
                 HasPassword = await _userManager.HasPasswordAsync(user),
                 PhoneNumber = await _userManager.GetPhoneNumberAsync(user),
                 TwoFactor = await _userManager.GetTwoFactorEnabledAsync(user),
                 Logins = await _userManager.GetLoginsAsync(user),
-                BrowserRemembered = await _signInManager.IsTwoFactorClientRememberedAsync(user)
+                BrowserRemembered = await _signInManager.IsTwoFactorClientRememberedAsync(user),
+                Characters = characters
             };
             return View(model);
         }

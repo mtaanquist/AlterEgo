@@ -11,5 +11,8 @@ namespace AlterEgo.Models.AccountViewModels
         [Required]
         [EmailAddress]
         public string Email { get; set; }
+
+        
+        public Character MainCharacter { get; set; }
     }
 }

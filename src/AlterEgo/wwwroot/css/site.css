@@ -1,50 +1,87 @@
 ﻿body {
-    padding-top: 50px;
-    padding-bottom: 20px;
+  padding-top: 70px;
 }
 
-/* Wrapping element */
-/* Set some basic padding to keep content from hitting the edges */
-.body-content {
-    padding-left: 15px;
-    padding-right: 15px;
+abbr.timeago {
+    text-decoration: none;
+    font-size: 12px;
 }
 
-/* Set widths on the form inputs since otherwise they're 100% wide */
-input,
-select,
-textarea {
-    max-width: 280px;
+/* World of Warcraft class colours */
+.class-death-knight {
+    color: #c41f3b;
 }
 
-/* Carousel */
-.carousel-caption p {
-    font-size: 20px;
-    line-height: 1.4;
+.class-demon-hunter {
+    color: #a330c9;
 }
 
-/* buttons and links extension to use brackets: [ click me ] */
-.btn-bracketed::before {
-    display:inline-block;
-    content: "[";
-    padding-right: 0.5em;
-}
-.btn-bracketed::after {
-    display:inline-block;
-    content: "]";
-    padding-left: 0.5em;
+.class-druid {
+    color: #ff7d0a;
 }
 
-/* Make .svg files in the carousel display properly in older browsers */
-.carousel-inner .item img[src$=".svg"]
-{
-    width: 100%;
+.class-hunter {
+    color: #abd473;
 }
 
-/* Hide/rearrange for smaller screens */
-@media screen and (max-width: 767px) {
-  /* Hide captions */
-  .carousel-caption {
-    display: none
-  }
+.class-mage {
+    color: #69ccf0;
+}
+
+.class-monk {
+    color: #00ff96;
+}
+
+.class-paladin {
+    color: #f58cba;
+}
+
+.class-priest {
+    color: #ffffff;
+}
+
+.class-rogue {
+    color: #fff569;
+}
+
+.class-shaman {
+    color: #0070de;
+}
+
+.class-warlock {
+    color: #9482c9;
+}
+
+.class-warrior {
+    color: #c79c6e;
+}
+
+/* World of Warcraft item class colours */
+
+.item-poor {
+    color: #9d9d9d;
+}
+
+.item-common {
+    color: #ffffff;
+}
+
+.item-uncommon {
+    color: #1eff00;
+}
+
+.item-rare {
+    color: #0070dd;
+}
+
+.item-epic {
+    color: #a335ee;
+}
+
+.item-legendary {
+    color: #ff8000;
+}
+
+.item-artifact {
+    color: #e6cc80;
 }

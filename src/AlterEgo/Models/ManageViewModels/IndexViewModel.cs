@@ -17,5 +17,7 @@ namespace AlterEgo.Models.ManageViewModels
         public bool TwoFactor { get; set; }
 
         public bool BrowserRemembered { get; set; }
+
+        public IList<Character> Characters { get; set; }
     }
 }
