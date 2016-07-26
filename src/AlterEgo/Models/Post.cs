@@ -1,8 +1,5 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace AlterEgo.Models
 {
@@ -10,6 +7,8 @@ namespace AlterEgo.Models
     {
         public int PostId { get; set; }
         public string Content { get; set; }
+        [NotMapped]
+        public string FormattedContent { get; set; }
 
         public string AuthorUserId { get; set; }
         public ApplicationUser Author { get; set; }

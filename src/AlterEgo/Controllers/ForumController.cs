@@ -8,6 +8,7 @@ using AlterEgo.Models;
 using AlterEgo.Models.ForumViewModels;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Razor.Compilation.TagHelpers;
 using Microsoft.EntityFrameworkCore;
 
 namespace AlterEgo.Controllers
@@ -26,10 +27,16 @@ namespace AlterEgo.Controllers
         public async Task<IActionResult> Index()
         {
             var categories =
-                _context.Categories.Include(category => category.Forums)
-                    .ThenInclude(forum => forum.Threads)
-                    .ThenInclude(thread => thread.Posts)
-                    .ToList();
+                await
+                    _context.Categories
+                        .Include(category => category.Forums)
+                            .ThenInclude(forum => forum.Threads)
+                            .ThenInclude(thread => thread.Posts)
+                        .Include(category => category.Forums)
+                            .ThenInclude(forum => forum.LatestPost)
+                            .ThenInclude(post => post.Thread)
+                            .ThenInclude(post => post.Author)
+                        .ToListAsync();
 
             var model = new IndexViewModel
             {
@@ -64,11 +71,21 @@ namespace AlterEgo.Controllers
             var thread =
                 await
                     _context.Threads.Include(t => t.Author)
+                        .Include(t => t.Forum).ThenInclude(f => f.Category)
                         .Include(t => t.Posts)
                         .ThenInclude(p => p.Author)
                         .SingleOrDefaultAsync(t => t.ThreadId == id);
 
+            thread.Posts.ForEach(post =>
+            {
+                post.FormattedContent = CommonMark.CommonMarkConverter.Convert(post.Content);
+            });
+
             var model = new ThreadViewModel { Thread = thread };
+
+            thread.Views++;
+            _context.Threads.Update(thread);
+            await _context.SaveChangesAsync();
 
             return View(model);
         }
@@ -84,14 +101,15 @@ namespace AlterEgo.Controllers
         }
 
         // 
-        // GET: /forum/newthread
+        // POST: /forum/newthread
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> NewThread(NewThreadViewModel model)
         {
             var postDateTime = DateTime.Now;
             var author = await _userManager.GetUserAsync(HttpContext.User);
-            var forum = await _context.Forums.Include(f => f.Category).SingleOrDefaultAsync(f => f.ForumId == model.ForumId);
+            var forum =
+                await _context.Forums.Include(f => f.Category).SingleOrDefaultAsync(f => f.ForumId == model.ForumId);
 
             var thread = new Thread
             {
@@ -100,7 +118,9 @@ namespace AlterEgo.Controllers
                 Name = model.ThreadSubject,
                 CreatedAt = postDateTime,
                 AuthorUserId = author.Id,
-                Author = author
+                Author = author,
+                IsStickied = model.StickyThread,
+                IsLocked = model.LockThread
             };
 
             var post = new Post
@@ -112,17 +132,62 @@ namespace AlterEgo.Controllers
                 Author = author
             };
 
+            thread.LatestPostTime = postDateTime;
+            forum.LatestPost = post;
+
             _context.Threads.Add(thread);
             _context.Posts.Add(post);
+            _context.Forums.Update(forum);
             await _context.SaveChangesAsync();
 
             return RedirectToAction(nameof(Index));
         }
 
-        public async Task<IActionResult> Admin()
+        // 
+        // GET: /forum/newreply/threadid
+        public async Task<IActionResult> NewReply(int id)
         {
+            var thread =
+                await
+                    _context.Threads.Include(t => t.Author)
+                        .Include(t => t.Forum).ThenInclude(f => f.Category)
+                        .Include(t => t.Posts).ThenInclude(p => p.Author)
+                        .SingleOrDefaultAsync(t => t.ThreadId == id);
 
-            return View();
+            var model = new NewReplyViewModel { Thread = thread };
+
+            return View(model);
+        }
+
+        //
+        // POST: /forum/newreply
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> NewReply(NewReplyViewModel model)
+        {
+            var postDateTime = DateTime.Now;
+            var author = await _userManager.GetUserAsync(HttpContext.User);
+            var thread = await _context.Threads.SingleOrDefaultAsync(t => t.ThreadId == model.ThreadId);
+            var forum = await _context.Forums.SingleOrDefaultAsync(f => f.ForumId == thread.ForumId);
+
+            var post = new Post
+            {
+                Thread = thread,
+                Content = model.Content,
+                Author = author,
+                AuthorUserId = author.Id,
+                PostedAt = postDateTime
+            };
+
+            thread.LatestPostTime = postDateTime;
+            forum.LatestPost = post;
+
+            _context.Posts.Add(post);
+            _context.Threads.Update(thread);
+            _context.Forums.Update(forum);
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction(nameof(Thread), new { id = thread.ThreadId });
         }
     }
 }

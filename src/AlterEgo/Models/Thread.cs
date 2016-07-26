@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace AlterEgo.Models
 {
@@ -10,6 +11,8 @@ namespace AlterEgo.Models
         public bool IsLocked { get; set; }
         public bool IsStickied { get; set; }
         public bool IsDeleted { get; set; }
+
+        public int Views { get; set; }
 
         public string AuthorUserId { get; set; }
         public ApplicationUser Author { get; set; }
@@ -23,5 +26,7 @@ namespace AlterEgo.Models
 
         public int ForumId { get; set; }
         public Forum Forum { get; set; }
+
+        public DateTime LatestPostTime { get; set; }
     }
 }

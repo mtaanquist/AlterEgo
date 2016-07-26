@@ -31,6 +31,22 @@
                 <textarea asp-for="PostContent" class="form-control" rows="12"></textarea>
             </div>
 
+            <div class="form-group">
+                <textarea class="form-control"></textarea>
+            </div>
+
+            <div class="checkbox">
+                <label>
+                    <input asp-for="StickyThread"> Sticky the thread after posting?
+                </label>
+            </div>
+
+            <div class="checkbox">
+                <label>
+                    <input asp-for="LockThread"> Lock the thread for replies after posting?
+                </label>
+            </div>
+
             <div class="pull-right">
                 <button type="submit" class="btn btn-default">
                     Post New Thread

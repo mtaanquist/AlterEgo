@@ -8,9 +8,10 @@ using AlterEgo.Data;
 namespace AlterEgo.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20160726192759_20160726-4")]
+    partial class _201607264
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
             modelBuilder
                 .HasAnnotation("ProductVersion", "1.0.0-rtm-21431");
@@ -376,8 +377,6 @@ namespace AlterEgo.Migrations
                     b.Property<bool>("IsLocked");
 
                     b.Property<bool>("IsStickied");
-
-                    b.Property<DateTime>("LatestPostTime");
 
                     b.Property<DateTime>("ModifiedAt");
 

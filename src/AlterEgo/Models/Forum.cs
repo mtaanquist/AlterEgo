@@ -18,5 +18,7 @@ namespace AlterEgo.Models
         public Category Category { get; set; }
 
         public List<Thread> Threads { get; set; }
+
+        public Post LatestPost { get; set; }
     }
 }

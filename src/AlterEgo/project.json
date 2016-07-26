@@ -46,7 +46,7 @@
     "Microsoft.AspNet.WebApi.Client": "5.2.3",
     "System.Runtime.Serialization.Xml": "4.1.1",
     "Npgsql.EntityFrameworkCore.PostgreSQL": "1.0.0",
-    "CommonMark.NET": "0.13.2",
+    "CommonMark.NET": "0.13.4",
     "Hangfire": "1.6.0"
   },
 

@@ -11,10 +11,24 @@
             <li><a asp-controller="Forum" asp-action="Index">Forum</a></li>
             <li class="active">@Model.Forum.Category.Name</li>
         </ol>
+    </div>
+</div>
 
-        <h2 class="page-header">
-            @ViewBag.Title
-        </h2>
+<div class="row">
+    <div class="col-lg-12">
+        <div class="view-header">
+            <div class="header-icon">
+                <i class="pe page-header-icon pe-7s-angle-right"></i>
+            </div>
+
+            <div class="header-title">
+                <h2>@Model.Forum.Name</h2>
+                <small>
+                    @Model.Forum.Description
+                </small>
+            </div>
+        </div>
+        <hr />
     </div>
 </div>
 
@@ -26,69 +40,46 @@
     </div>
 </div>
 
-<hr />
-
 <div class="row">
     <div class="col-lg-12">
-        <table class="table table-hover">
+        <table class="table table-hover table-striped">
             <thead>
                 <tr>
-                    <th class="col-lg-5">Subject</th>
-                    <th class="col-lg-2">Author</th>
-                    <th class="col-lg-1">Replies</th>
-                    <th class="col-lg-1">Views</th>
-                    <th class="col-lg-3 text-right">Last Poster</th>
+                    <th class="col-lg-7"></th>
+                    <th class="col-lg-2"></th>
+                    <th class="col-lg-3"></th>
                 </tr>
             </thead>
             <tbody>
-            @foreach (var thread in Model.Threads)
+            @foreach (var thread in Model.Threads.OrderByDescending(thread => thread.IsStickied).ThenByDescending(thread => thread.LatestPostTime))
             {
                 <tr>
                     <td>
                         @if (thread.IsStickied) { @Html.Raw("<span class=\"label label-default\">Sticky</span>") }
-                        <a asp-controller="Forum" asp-action="Thread">@thread.Name</a>
+                        @if (thread.IsLocked) { @Html.Raw("<span class=\"label label-default pull-right\">Locked</span>") }
+                        <a asp-controller="Forum" asp-action="Thread" asp-route-id="@thread.ThreadId">@thread.Name</a><br/>
+                        <small>Started by @thread.Author, at @thread.CreatedAt.ToString("g")</small>
                     </td>
-                    <td>@thread.AuthorUserId</td>
-                    <td>4658</td>
-                    <td>153351</td>
-                    <td class="text-right">Karantor#2228 @DateTime.Now.ToString("d")</td>
+                    <td>
+                        <small>@thread.Posts.Count replies</small><br/>
+                        <small>@thread.Views views</small>
+                    </td>
+                    <td class="text-right">
+                        @{
+                            var latestPost = thread.Posts.OrderByDescending(post => post.PostedAt).First();
+                        }
+                        @if (latestPost != null)
+                        {
+                            @latestPost.Author <a href="#" title="Go to latest post"><i class="fa fa-chevron-circle-right" aria-hidden="true"></i></a><br/>
+                            <abbr class="timeago" title="@latestPost.PostedAt.ToString("O")">@latestPost.PostedAt.ToString("g")</abbr>
+                        }
+                        else
+                        {
+                            <em>No replies found</em>
+                        }
+                    </td>
                 </tr>
             }
-            <tr>
-                <td><span class="label label-default">Sticky</span> <a href="">General Tech Thread</a></td>
-                <td>Karantor#2228</td>
-                <td>4658</td>
-                <td>153351</td>
-                <td class="text-right">Karantor#2228 @DateTime.Now.ToString("d")</td>
-            </tr>
-            <tr>
-                <td>
-                    <span class="label label-default">Sticky</span>
-                    <a href="">General Tech Thread</a>
-                    <span class="pull-right label label-default">
-                            <i class="fa fa-lock"></i>
-                        </span>
-                </td>
-                <td>Karantor#2228</td>
-                <td>4658</td>
-                <td>153351</td>
-                <td class="text-right">Karantor#2228 @DateTime.Now.ToString("d")</td>
-            </tr>
-            <tr>
-                <td><a href="">General Tech Thread</a> <span class="label label-default pull-right"><i class="fa fa-lock"></i></span></td>
-                <td>Karantor#2228</td>
-                <td>4658</td>
-                <td>153351</td>
-                <td class="text-right">Karantor#2228 @DateTime.Now.ToString("d")</td>
-            </tr>
-
-            <tr>
-                <td><a href="">General Tech Thread</a></td>
-                <td>Karantor#2228</td>
-                <td>4658</td>
-                <td>153351</td>
-                <td class="text-right">Karantor#2228, at @DateTime.Now.ToString("d")</td>
-            </tr>
             </tbody>
         </table>
     </div>

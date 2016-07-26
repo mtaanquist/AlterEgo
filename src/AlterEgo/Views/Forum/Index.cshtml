@@ -11,16 +11,25 @@
             <h3 class="page-header">@category.Name</h3>
             <div class="row">
 
-                @foreach (var forum in category.Forums)
+                @foreach (var forum in category.Forums.OrderBy(forum => forum.ForumId))
                 {
 
                     <div class="view-header">
                         <div class="pull-right text-right hidden-xs" style="line-height: 14px">
-                            <small>
-                                <a href="#">Total War Megathread: Big f...</a><br />
-                                By Torgan<br />
-                                <span class="c-white">@DateTime.Now.ToString("g")</span>
-                            </small>
+                            @if (forum.LatestPost != null)
+                            {
+                                <small>
+                                    <a asp-controller="Forum" asp-action="Thread" asp-route-id="@forum.LatestPost.Thread.ThreadId">@forum.LatestPost.Thread.Name</a><br/>
+                                    By @forum.LatestPost.Author<br/>
+                                    <span class="c-white">@forum.LatestPost.PostedAt.ToString("g")</span>
+                                </small>
+                            }
+                            else
+                            {
+                                <small>
+                                    <em>No posts found</em>
+                                </small>
+                            }
                         </div>
                         <div class="header-icon">
                             <i class="pe page-header-icon pe-7s-angle-right"></i>
