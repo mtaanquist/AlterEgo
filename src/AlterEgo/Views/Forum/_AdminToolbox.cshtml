@@ -1,0 +1,90 @@
+@model AlterEgo.Models.ForumViewModels.AdminToolboxViewModel
+
+@{
+    ViewBag.Categories = new SelectList(Model.Categories, "CategoryId", "Name");
+}
+
+<div class="row">
+    <div class="col-lg-12">
+        <div class="panel panel-filled panel-c-warning collapsed">
+            <div class="panel-heading">
+                <div class="panel-tools">
+                    <a class="panel-toggle"><i class="fa fa-chevron-up"></i></a>
+                </div>
+                <i class="fa fa-wrench" aria-hidden="true"></i> Forum Administration Toolbox
+            </div>
+            <div class="panel-body">
+                <div class="row">
+                    <div class="col-lg-12">
+                        <p>Use the tools below to either add new categories or forums under those categories.</p>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-lg-12">
+                        <div class="tabs-container">
+                            <div class="tabs-left">
+                                <ul class="nav nav-tabs">
+                                    <li class="active"><a aria-expanded="true" data-toggle="tab" href="#tab-1">New category</a></li>
+                                    <li class=""><a aria-expanded="false" data-toggle="tab" href="#tab-2">New forum</a></li>
+                                </ul>
+                                <div class="tab-content ">
+                                    <div id="tab-1" class="tab-pane active">
+                                        <div class="panel-body">
+                                            <p>Categories are the headers on the overview page of the forums. A category is used to house forums underneath it, and can have several. If you're looking instead to add a new forum, use the tab navigation to the left.</p>
+                                            <form asp-controller="Forum" asp-action="NewCategory" asp-antiforgery="true" role="form">
+                                                <div class="form-group">
+                                                    <label asp-for="CategoryName">Name of category</label>
+                                                    <input asp-for="CategoryName" class="form-control" />
+                                                </div>
+                                                <div class="form-group">
+                                                    <label asp-for="CategoryName">Who can see this category?</label>
+                                                    <select asp-for="CategoryReadableBy" asp-items="Html.GetEnumSelectList<GuildRank>()" class="form-control"></select>
+                                                    <p class="help-block">Every rank should be read as "name of rank (and above)". If a category is set to only be readable by officers, then any with a lower rank will not be able to see it. Similarly, if set to "Guild Leader", then no one but the leader can read it.</p>
+                                                </div>
+                                                <button type="submit" class="btn btn-default">Submit</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                    <div id="tab-2" class="tab-pane">
+                                        <div class="panel-body">
+                                            <p>Forums are the homes of threads. The settings below allow you to set up the permissions for the forum you're creating, as well as where it belongs to. By default, all forums created are placed underneath the last one in that category, but this can be changed later.</p>
+                                            <form asp-controller="Forum" asp-action="NewForum" asp-antiforgery="true" role="form">
+                                                <h4>Details</h4>
+                                                <p>Give the forum a name, and briefly describe what the purpose of that forum is.</p>
+                                                <div class="form-group">
+                                                    <label asp-for="CategoryId">Place forum in the following category</label>
+                                                    <select asp-for="CategoryId" asp-items="ViewBag.Categories" class="form-control"></select>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label asp-for="ForumName">Name of forum</label>
+                                                    <input asp-for="ForumName" class="form-control" />
+                                                </div>
+                                                <div class="form-group">
+                                                    <label asp-for="ForumName">Forum description</label>
+                                                    <input asp-for="ForumDescription" class="form-control" />
+                                                </div>
+                                                <br />
+                                                <h4>Permissions</h4>
+                                                <p>Set who can read and write in the forum.</p>
+                                                <div class="form-group">
+                                                    <label asp-for="ForumReadableBy">Who can see this forum?</label>
+                                                    <select asp-for="ForumReadableBy" asp-items="Html.GetEnumSelectList<GuildRank>()" class="form-control"></select>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label asp-for="ForumWritableBy">Who can post new threads in the forum?</label>
+                                                    <select asp-for="ForumWritableBy" asp-items="Html.GetEnumSelectList<GuildRank>()" class="form-control"></select>
+                                                    <p class="help-block">Every rank should be read as "name of rank (and above)". If a category is set to only be readable by officers, then any with a lower rank will not be able to see it. Similarly, if set to "Guild Leader", then no one but the leader can read it.</p>
+                                                </div>
+                                                <button type="submit" class="btn btn-default">Submit</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

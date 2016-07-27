@@ -9,8 +9,6 @@ using AlterEgo.Data;
 using AlterEgo.Models;
 using AlterEgo.Services;
 using AspNet.Security.OAuth.BattleNet;
-using System.IO;
-using System.Security.Cryptography.X509Certificates;
 
 namespace AlterEgo
 {
@@ -39,7 +37,11 @@ namespace AlterEgo
                 //options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection"))
                 options.UseNpgsql(Configuration.GetConnectionString("PostgreSqlConnection")));
 
-            services.AddIdentity<ApplicationUser, IdentityRole>()
+            services.AddIdentity<ApplicationUser, IdentityRole>(options =>
+                {
+                    options.User.AllowedUserNameCharacters =
+                        "aáàäbcdeéèfghiíìjklmnoóòöpqrstuüvwxyzæøåAÁÀÄBCDEÉÈFGHIÍÌJKLMNOÓÒÖPQRSTUÜVWXYÆØÅZ0123456789#";
+                })
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddDefaultTokenProviders();
 
@@ -70,7 +72,7 @@ namespace AlterEgo
             {
                 app.UseDeveloperExceptionPage();
                 app.UseDatabaseErrorPage();
-                app.UseBrowserLink();                
+                app.UseBrowserLink();
             }
             else
             {

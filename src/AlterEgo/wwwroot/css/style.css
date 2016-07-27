@@ -1241,13 +1241,14 @@ sup {
 
 .navbar-default .navbar-brand,
 .navbar-default .navbar-brand:focus {
-    width: 200px;
     background-color: #f6a821;
     height: 60px;
-    padding: 20px 25px;
+    padding: 20px 20px 20px 25px;
     font-weight: 400;
-    letter-spacing: 10px;
+    letter-spacing: 5px;
     color: #FFFFFF;
+    margin-right: 1em;
+    text-align: center;
 }
 
 .navbar-default .navbar-brand {

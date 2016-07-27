@@ -1,18 +1,18 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using AlterEgo.Data;
+using AlterEgo.Helpers;
 using AlterEgo.Models;
 using AlterEgo.Models.ForumViewModels;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Razor.Compilation.TagHelpers;
 using Microsoft.EntityFrameworkCore;
 
 namespace AlterEgo.Controllers
 {
+    [Authorize]
     public class ForumController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -76,10 +76,9 @@ namespace AlterEgo.Controllers
                         .ThenInclude(p => p.Author)
                         .SingleOrDefaultAsync(t => t.ThreadId == id);
 
-            thread.Posts.ForEach(post =>
-            {
-                post.FormattedContent = CommonMark.CommonMarkConverter.Convert(post.Content);
-            });
+
+
+            thread.Posts.ForEach(post => post.FormattedContent = MarkdownHelper.Transform(post.Content));
 
             var model = new ThreadViewModel { Thread = thread };
 
@@ -140,7 +139,97 @@ namespace AlterEgo.Controllers
             _context.Forums.Update(forum);
             await _context.SaveChangesAsync();
 
-            return RedirectToAction(nameof(Index));
+            return RedirectToAction(nameof(Thread), new { id = thread.ThreadId });
+        }
+
+        //
+        // GET: /forum/editthread/threadid
+        public async Task<IActionResult> EditThread(int id)
+        {
+            var thread = await _context.Threads.SingleAsync(t => t.ThreadId == id);
+            var post = await _context.Posts.FirstAsync(p => (p.ThreadId == id && p.PostedAt == thread.CreatedAt));
+
+            var model = new EditThreadViewModel
+            {
+                Thread = thread,
+                ThreadId = thread.ThreadId,
+                PostId = post.PostId,
+                Content = post.Content,
+                Subject = thread.Name
+            };
+
+            return View(model);
+        }
+
+        //
+        // POST: /forum/editthread/threadid
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditThread(EditThreadViewModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                var author = await _userManager.GetUserAsync(HttpContext.User);
+                var editTime = DateTime.Now;
+
+                var thread = await _context.Threads.SingleAsync(t => t.ThreadId == model.ThreadId);
+                var post = await _context.Posts.FirstAsync(p => p.PostId == model.PostId);
+
+                thread.Name = model.Subject;
+                thread.Editor = author;
+                thread.ModifiedAt = editTime;
+
+                post.Content = model.Content;
+                post.Editor = author;
+                post.EditedAt = editTime;
+
+                _context.Threads.Update(thread);
+                _context.Posts.Update(post);
+                await _context.SaveChangesAsync();
+            }
+
+            return RedirectToAction(nameof(Thread), new { id = model.ThreadId });
+        }
+
+        //
+        // GET: /forum/editpost/postid
+        public async Task<IActionResult> EditPost(int id)
+        {
+            var post = await _context.Posts.Include(p => p.Thread).SingleAsync(p => p.PostId == id);
+            var model = new EditPostViewModel
+            {
+                Post = post,
+                Content = post.Content,
+                PostId = post.PostId
+            };
+
+            return View(model);
+        }
+
+        //
+        // POST: /forum/editpost/postid
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditPost(EditPostViewModel model)
+        {
+            Post post = null;
+
+            if (ModelState.IsValid)
+            {
+                var author = await _userManager.GetUserAsync(HttpContext.User);
+                var editTime = DateTime.Now;
+
+                post = await _context.Posts.Include(p => p.Thread).SingleOrDefaultAsync(p => p.PostId == model.PostId);
+
+                post.Content = model.Content;
+                post.Editor = author;
+                post.EditedAt = editTime;
+
+                _context.Posts.Update(post);
+                await _context.SaveChangesAsync();
+            }
+
+            return RedirectToAction(nameof(Thread), new { id = post?.Thread.ThreadId });
         }
 
         // 
@@ -189,5 +278,59 @@ namespace AlterEgo.Controllers
 
             return RedirectToAction(nameof(Thread), new { id = thread.ThreadId });
         }
+
+        #region Administration
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> NewCategory(AdminToolboxViewModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                var category = new Category
+                {
+                    Name = model.CategoryName,
+                    ReadableBy = model.CategoryReadableBy
+                };
+
+                _context.Categories.Add(category);
+                await _context.SaveChangesAsync();
+            }
+
+            return RedirectToAction(nameof(Index));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> NewForum(AdminToolboxViewModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                var category = await _context.Categories.SingleAsync(c => c.CategoryId == model.CategoryId);
+
+                var forum = new Forum
+                {
+                    Name = model.ForumName,
+                    Description = model.ForumDescription,
+                    Category = category,
+                    CategoryId = category.CategoryId,
+
+                    ReadableBy = model.ForumReadableBy,
+                    WritableBy = model.ForumWritableBy,
+
+                    CanLockThreads = model.ForumCanLockThreads,
+                    CanStickyThreads = model.ForumCanStickyThreads,
+                    CanEditThreads = model.ForumCanEditThreads,
+                    CanDeleteThreads = model.ForumCanDeleteThreads
+                };
+
+                _context.Forums.Add(forum);
+                await _context.SaveChangesAsync();
+            }
+
+            return RedirectToAction(nameof(Index));
+        }
+
+        #endregion
     }
 }

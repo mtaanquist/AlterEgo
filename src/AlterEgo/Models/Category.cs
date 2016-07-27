@@ -6,7 +6,11 @@ namespace AlterEgo.Models
     {
         public int CategoryId { get; set; }
         public string Name { get; set; }
+
+        public int SortOrder { get; set; }
+
         public int ReadableBy { get; set; }
+
         
         public List<Forum> Forums { get; set; }
     }

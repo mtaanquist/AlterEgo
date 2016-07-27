@@ -1,5 +1,7 @@
 ﻿@model AlterEgo.Models.ForumViewModels.ThreadViewModel
 
+@inject UserManager<ApplicationUser> UserManager
+
 @{
     ViewBag.Title = $"{Model.Thread.Name} - {Model.Thread.Forum.Name}";
 }
@@ -80,9 +82,31 @@
                     </div>
                     <div class="panel-body">
                         @Html.Raw(post.FormattedContent)
+
+                        @if (post.EditedAt > DateTime.MinValue)
+                        {
+                            <br />
+                            <small>
+                                <em><i class="fa fa-exclamation-triangle" aria-hidden="true"></i> Edited by @post.Editor, at @post.EditedAt.ToString("g")</em>
+                            </small>
+                        }
                     </div>
                     <div class="panel-footer">
-                        <button type="button" class="btn btn-sm btn-default">Quote</button>
+
+                        <div class="text-right">
+                            @*<button type="button" class="btn btn-sm btn-default">Quote</button>*@
+                            @if (UserManager.GetUserName(User).Equals(post.Author.ToString()))
+                            {
+                                if (post.PostedAt == Model.Thread.CreatedAt)
+                                {
+                                    <a asp-controller="Forum" asp-action="EditThread" asp-route-id="@Model.Thread.ThreadId" class="btn btn-sm btn-default">Edit</a>
+                                }
+                                else
+                                {
+                                    <a asp-controller="Forum" asp-action="EditPost" asp-route-id="@post.PostId" class="btn btn-sm btn-default">Edit</a>
+                                }
+                            }
+                        </div>
                     </div>
                 </div>
 
@@ -91,21 +115,24 @@
     </div>
 </div>
 
-<div class="row">
-    <div class="col-lg-12">
-        <hr />
-        <h4>Reply to this thread</h4>
-        <form asp-controller="Forum" asp-action="NewReply" asp-antiforgery="true" role="form">
-            <input asp-for="ThreadId" value="@Model.Thread.ThreadId" type="hidden" />
+@if (!Model.Thread.IsLocked)
+{
+    <div class="row">
+        <div class="col-lg-12">
+            <hr/>
+            <h4>Reply to this thread</h4>
+            <form asp-controller="Forum" asp-action="NewReply" asp-antiforgery="true" role="form">
+                <input asp-for="ThreadId" value="@Model.Thread.ThreadId" type="hidden"/>
 
-            <div class="form-group">
-                <label asp-for="Content" class="sr-only"></label>
-                <textarea asp-for="Content" class="form-control" rows="4"></textarea>
-            </div>
+                <div class="form-group">
+                    <label asp-for="Content" class="sr-only"></label>
+                    <textarea asp-for="Content" class="form-control" rows="4"></textarea>
+                </div>
 
-            <div class="pull-right">
-                <button type="submit" class="btn btn-default">Post Reply</button>
-            </div>
-        </form>
+                <div class="pull-right">
+                    <button type="submit" class="btn btn-default">Post Reply</button>
+                </div>
+            </form>
+        </div>
     </div>
-</div>
+}

@@ -8,14 +8,7 @@
     <div class="col-lg-12">
         <h2 class="page-header">@ViewBag.Title</h2>
         <p>
-            The text editor uses <a href="//en.wikipedia.org/wiki/Markdown">Markdown</a> to help format your post. This allows you to use certain symbols to format your post. Here are some of the most used ones:
-            <pre>
-*emphasis*
-**strong**
-* list
->block quote
-    code (4 spaces indent)
-[links](http://wikipedia.org)</pre>
+            The text editor uses <a href="//en.wikipedia.org/wiki/Markdown">Markdown</a> to help format your post. Any BBCode from other places will not work.
         </p>
 
         <form asp-controller="Forum" asp-action="NewReply" asp-antiforgery="true" role="form">

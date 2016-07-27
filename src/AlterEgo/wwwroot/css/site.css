@@ -1,5 +1,9 @@
-﻿body {
-  padding-top: 70px;
+﻿html {
+    overflow-y: scroll;
+}
+
+body {
+  padding-top: 80px;
 }
 
 abbr.timeago {

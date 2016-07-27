@@ -211,9 +211,7 @@ namespace AlterEgo.Controllers
                 var accessTokenExpiry = info.AuthenticationTokens.Single(x => x.Name.Equals("expires_at")).Value;
                 var battleTag = info.Principal.Claims.Single(c => c.Type.Equals(ClaimTypes.Name)).Value;
 
-                var battleTagNoId = battleTag.Split('#')[0];
-
-                var user = new ApplicationUser { UserName = battleTagNoId, Email = model.Email };
+                var user = new ApplicationUser { UserName = battleTag, Email = model.Email };
 
                 var claims = new List<Claim>
                 {

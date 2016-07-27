@@ -10,7 +10,8 @@
         <link rel="stylesheet" href="~/lib/font-awesome/css/font-awesome.css"/>
         <link rel="stylesheet" href="~/css/pe-icons/pe-icon-7-stroke.css" />
         <link rel="stylesheet" href="~/css/pe-icons/helper.css" />
-        <link rel="stylesheet" href="~/css/stroke-icons/style.css" />
+        <link rel="stylesheet" href="~/css/stroke-icons/style.css"/>
+        <link rel="stylesheet" href="~/lib/simplemde/dist/simplemde.css"/>
         <link rel="stylesheet" href="~/css/style.css"/>
         <link rel="stylesheet" href="~/css/site.css" />
     </environment>
@@ -21,7 +22,8 @@
         <link rel="stylesheet" href="~/lib/font-awesome/css/font-awesome.min.css"/>
         <link rel="stylesheet" href="~/css/pe-icons/pe-icon-7-stroke.min.css" />
         <link rel="stylesheet" href="~/css/pe-icons/helper.min.css" />
-        <link rel="stylesheet" href="~/css/stroke-icons/style.min.css" />
+        <link rel="stylesheet" href="~/css/stroke-icons/style.min.css"/>
+        <link rel="stylesheet" href="~/lib/simplemde/dist/simplemde.min.css" />
         <link rel="stylesheet" href="~/css/style.min.css" asp-append-version="true" />
         <link rel="stylesheet" href="~/css/site.min.css" asp-append-version="true" />
     </environment>
@@ -34,7 +36,7 @@
             @RenderBody()
             <hr />
             <footer>
-                <p>&copy; 2016 - AlterEgo</p>
+                <p>&copy; 2016 - Alter Ego</p>
             </footer>
         </div>
     </div>
@@ -48,6 +50,7 @@
                 asp-fallback-test="window.jQuery && window.jQuery.fn && window.jQuery.fn.modal">
         </script>
         @* Further global script files should be added here *@
+        <script src="~/lib/simplemde/dist/simplemde.min.js" asp-append-version="true"></script>
         <script src="~/lib/jquery-timeago/jquery.timeago.js" asp-append-version="true"></script>
         <script src="~/js/power.js" asp-append-version="true"></script>
         <script src="~/js/site.js" asp-append-version="true"></script>
@@ -62,6 +65,7 @@
                 asp-fallback-test="window.jQuery && window.jQuery.fn && window.jQuery.fn.modal">
         </script>
         @* Further global script files (minified) should be added here *@
+        <script src="~/lib/simplemde/dist/simplemde.min.js" asp-append-version="true"></script>
         <script src="~/lib/jquery-timeago/jquery.timeago.min.js" asp-append-version="true"></script>
         <script src="~/js/power.min.js" asp-append-version="true"></script>
         <script src="~/js/site.min.js" asp-append-version="true"></script>

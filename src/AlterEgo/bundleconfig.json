@@ -50,5 +50,23 @@
     "inputFiles": [
       "wwwroot/js/power.js"
     ]
+  },
+  {
+    "outputFileName": "wwwroot/js/simplemde/simplemde.min.js",
+    "inputFiles": [
+      "wwwroot/js/simplemde/simplemde.js"
+    ]
+  },
+  {
+    "outputFileName": "wwwroot/lib/simplemde/dist/simplemde.min.min.css",
+    "inputFiles": [
+      "wwwroot/lib/simplemde/dist/simplemde.min.css"
+    ]
+  },
+  {
+    "outputFileName": "wwwroot/lib/simplemde/dist/simplemde.min.css",
+    "inputFiles": [
+      "wwwroot/lib/simplemde/dist/simplemde.css"
+    ]
   }
 ]
