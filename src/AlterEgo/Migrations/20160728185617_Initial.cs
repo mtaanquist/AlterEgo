@@ -58,7 +58,8 @@ namespace AlterEgo.Migrations
                     CategoryId = table.Column<int>(nullable: false)
                         .Annotation("Npgsql:ValueGeneratedOnAdd", true),
                     Name = table.Column<string>(nullable: true),
-                    ReadableBy = table.Column<int>(nullable: false)
+                    ReadableBy = table.Column<int>(nullable: false),
+                    SortOrder = table.Column<int>(nullable: false)
                 },
                 constraints: table =>
                 {
@@ -201,33 +202,6 @@ namespace AlterEgo.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Forums",
-                columns: table => new
-                {
-                    ForumId = table.Column<int>(nullable: false)
-                        .Annotation("Npgsql:ValueGeneratedOnAdd", true),
-                    CanDeleteThreads = table.Column<int>(nullable: false),
-                    CanEditThreads = table.Column<int>(nullable: false),
-                    CanLockThreads = table.Column<int>(nullable: false),
-                    CanStickyThreads = table.Column<int>(nullable: false),
-                    CategoryId = table.Column<int>(nullable: false),
-                    Description = table.Column<string>(nullable: true),
-                    Name = table.Column<string>(nullable: true),
-                    ReadableBy = table.Column<int>(nullable: false),
-                    WritableBy = table.Column<int>(nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Forums", x => x.ForumId);
-                    table.ForeignKey(
-                        name: "FK_Forums_Categories_CategoryId",
-                        column: x => x.CategoryId,
-                        principalTable: "Categories",
-                        principalColumn: "CategoryId",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "Member",
                 columns: table => new
                 {
@@ -294,47 +268,6 @@ namespace AlterEgo.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Threads",
-                columns: table => new
-                {
-                    ThreadId = table.Column<int>(nullable: false)
-                        .Annotation("Npgsql:ValueGeneratedOnAdd", true),
-                    AuthorId = table.Column<string>(nullable: true),
-                    AuthorUserId = table.Column<int>(nullable: false),
-                    CreatedAt = table.Column<DateTime>(nullable: false),
-                    EditorId = table.Column<string>(nullable: true),
-                    EditorUserId = table.Column<int>(nullable: false),
-                    ForumId = table.Column<int>(nullable: false),
-                    IsDeleted = table.Column<bool>(nullable: false),
-                    IsLocked = table.Column<bool>(nullable: false),
-                    IsStickied = table.Column<bool>(nullable: false),
-                    ModifiedAt = table.Column<DateTime>(nullable: false),
-                    Name = table.Column<string>(nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Threads", x => x.ThreadId);
-                    table.ForeignKey(
-                        name: "FK_Threads_AspNetUsers_AuthorId",
-                        column: x => x.AuthorId,
-                        principalTable: "AspNetUsers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_Threads_AspNetUsers_EditorId",
-                        column: x => x.EditorId,
-                        principalTable: "AspNetUsers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_Threads_Forums_ForumId",
-                        column: x => x.ForumId,
-                        principalTable: "Forums",
-                        principalColumn: "ForumId",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "Characters",
                 columns: table => new
                 {
@@ -397,44 +330,6 @@ namespace AlterEgo.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Posts",
-                columns: table => new
-                {
-                    PostId = table.Column<int>(nullable: false)
-                        .Annotation("Npgsql:ValueGeneratedOnAdd", true),
-                    AuthorId = table.Column<string>(nullable: true),
-                    AuthorUserId = table.Column<int>(nullable: false),
-                    Content = table.Column<string>(nullable: true),
-                    EditedAt = table.Column<DateTime>(nullable: false),
-                    EditorId = table.Column<string>(nullable: true),
-                    EditorUserId = table.Column<int>(nullable: false),
-                    PostedAt = table.Column<DateTime>(nullable: false),
-                    ThreadId = table.Column<int>(nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Posts", x => x.PostId);
-                    table.ForeignKey(
-                        name: "FK_Posts_AspNetUsers_AuthorId",
-                        column: x => x.AuthorId,
-                        principalTable: "AspNetUsers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_Posts_AspNetUsers_EditorId",
-                        column: x => x.EditorId,
-                        principalTable: "AspNetUsers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_Posts_Threads_ThreadId",
-                        column: x => x.ThreadId,
-                        principalTable: "Threads",
-                        principalColumn: "ThreadId",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "News",
                 columns: table => new
                 {
@@ -472,6 +367,116 @@ namespace AlterEgo.Migrations
                         principalTable: "Guilds",
                         principalColumns: new[] { "Name", "Realm" },
                         onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Posts",
+                columns: table => new
+                {
+                    PostId = table.Column<int>(nullable: false)
+                        .Annotation("Npgsql:ValueGeneratedOnAdd", true),
+                    AuthorId = table.Column<string>(nullable: true),
+                    AuthorUserId = table.Column<string>(nullable: true),
+                    Content = table.Column<string>(nullable: true),
+                    EditedAt = table.Column<DateTime>(nullable: false),
+                    EditorId = table.Column<string>(nullable: true),
+                    EditorUserId = table.Column<int>(nullable: false),
+                    PostedAt = table.Column<DateTime>(nullable: false),
+                    ThreadId = table.Column<int>(nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Posts", x => x.PostId);
+                    table.ForeignKey(
+                        name: "FK_Posts_AspNetUsers_AuthorId",
+                        column: x => x.AuthorId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_Posts_AspNetUsers_EditorId",
+                        column: x => x.EditorId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Forums",
+                columns: table => new
+                {
+                    ForumId = table.Column<int>(nullable: false)
+                        .Annotation("Npgsql:ValueGeneratedOnAdd", true),
+                    CanDeleteThreads = table.Column<int>(nullable: false),
+                    CanEditThreads = table.Column<int>(nullable: false),
+                    CanLockThreads = table.Column<int>(nullable: false),
+                    CanStickyThreads = table.Column<int>(nullable: false),
+                    CategoryId = table.Column<int>(nullable: false),
+                    Description = table.Column<string>(nullable: true),
+                    LatestPostPostId = table.Column<int>(nullable: true),
+                    Name = table.Column<string>(nullable: true),
+                    ReadableBy = table.Column<int>(nullable: false),
+                    SortOrder = table.Column<int>(nullable: false),
+                    WritableBy = table.Column<int>(nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Forums", x => x.ForumId);
+                    table.ForeignKey(
+                        name: "FK_Forums_Categories_CategoryId",
+                        column: x => x.CategoryId,
+                        principalTable: "Categories",
+                        principalColumn: "CategoryId",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Forums_Posts_LatestPostPostId",
+                        column: x => x.LatestPostPostId,
+                        principalTable: "Posts",
+                        principalColumn: "PostId",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Threads",
+                columns: table => new
+                {
+                    ThreadId = table.Column<int>(nullable: false)
+                        .Annotation("Npgsql:ValueGeneratedOnAdd", true),
+                    AuthorId = table.Column<string>(nullable: true),
+                    AuthorUserId = table.Column<string>(nullable: true),
+                    CreatedAt = table.Column<DateTime>(nullable: false),
+                    EditorId = table.Column<string>(nullable: true),
+                    EditorUserId = table.Column<int>(nullable: false),
+                    ForumId = table.Column<int>(nullable: false),
+                    IsDeleted = table.Column<bool>(nullable: false),
+                    IsLocked = table.Column<bool>(nullable: false),
+                    IsStickied = table.Column<bool>(nullable: false),
+                    LatestPostTime = table.Column<DateTime>(nullable: false),
+                    ModifiedAt = table.Column<DateTime>(nullable: false),
+                    Name = table.Column<string>(nullable: true),
+                    Views = table.Column<int>(nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Threads", x => x.ThreadId);
+                    table.ForeignKey(
+                        name: "FK_Threads_AspNetUsers_AuthorId",
+                        column: x => x.AuthorId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_Threads_AspNetUsers_EditorId",
+                        column: x => x.EditorId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_Threads_Forums_ForumId",
+                        column: x => x.ForumId,
+                        principalTable: "Forums",
+                        principalColumn: "ForumId",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateIndex(
@@ -520,6 +525,11 @@ namespace AlterEgo.Migrations
                 name: "IX_Forums_CategoryId",
                 table: "Forums",
                 column: "CategoryId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Forums_LatestPostPostId",
+                table: "Forums",
+                column: "LatestPostPostId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Member_GuildName_GuildRealm",
@@ -600,18 +610,47 @@ namespace AlterEgo.Migrations
                 name: "IX_AspNetUserRoles_UserId",
                 table: "AspNetUserRoles",
                 column: "UserId");
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_Posts_Threads_ThreadId",
+                table: "Posts",
+                column: "ThreadId",
+                principalTable: "Threads",
+                principalColumn: "ThreadId",
+                onDelete: ReferentialAction.Cascade);
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropForeignKey(
+                name: "FK_Posts_AspNetUsers_AuthorId",
+                table: "Posts");
+
+            migrationBuilder.DropForeignKey(
+                name: "FK_Posts_AspNetUsers_EditorId",
+                table: "Posts");
+
+            migrationBuilder.DropForeignKey(
+                name: "FK_Threads_AspNetUsers_AuthorId",
+                table: "Threads");
+
+            migrationBuilder.DropForeignKey(
+                name: "FK_Threads_AspNetUsers_EditorId",
+                table: "Threads");
+
+            migrationBuilder.DropForeignKey(
+                name: "FK_Forums_Categories_CategoryId",
+                table: "Forums");
+
+            migrationBuilder.DropForeignKey(
+                name: "FK_Forums_Posts_LatestPostPostId",
+                table: "Forums");
+
             migrationBuilder.DropTable(
                 name: "Criteria");
 
             migrationBuilder.DropTable(
                 name: "News");
-
-            migrationBuilder.DropTable(
-                name: "Posts");
 
             migrationBuilder.DropTable(
                 name: "AspNetRoleClaims");
@@ -635,9 +674,6 @@ namespace AlterEgo.Migrations
                 name: "Characters");
 
             migrationBuilder.DropTable(
-                name: "Threads");
-
-            migrationBuilder.DropTable(
                 name: "AspNetRoles");
 
             migrationBuilder.DropTable(
@@ -650,16 +686,22 @@ namespace AlterEgo.Migrations
                 name: "Member");
 
             migrationBuilder.DropTable(
-                name: "AspNetUsers");
-
-            migrationBuilder.DropTable(
-                name: "Forums");
-
-            migrationBuilder.DropTable(
                 name: "Guilds");
 
             migrationBuilder.DropTable(
+                name: "AspNetUsers");
+
+            migrationBuilder.DropTable(
                 name: "Categories");
+
+            migrationBuilder.DropTable(
+                name: "Posts");
+
+            migrationBuilder.DropTable(
+                name: "Threads");
+
+            migrationBuilder.DropTable(
+                name: "Forums");
         }
     }
 }

@@ -35,6 +35,8 @@ namespace AlterEgo.Controllers
                         .Include(category => category.Forums)
                             .ThenInclude(forum => forum.LatestPost)
                             .ThenInclude(post => post.Thread)
+                        .Include(category => category.Forums)
+                            .ThenInclude(forum => forum.LatestPost)
                             .ThenInclude(post => post.Author)
                         .ToListAsync();
 
@@ -55,6 +57,7 @@ namespace AlterEgo.Controllers
                     _context.Threads.Include(t => t.Author)
                         .Include(t => t.Editor)
                         .Include(t => t.Posts)
+                            .ThenInclude(post => post.Author)
                         .Where(thread => thread.ForumId == id)
                         .ToListAsync();
 

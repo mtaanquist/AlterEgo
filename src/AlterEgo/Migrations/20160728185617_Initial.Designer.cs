@@ -8,8 +8,8 @@ using AlterEgo.Data;
 namespace AlterEgo.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20160725223505_20160726-1")]
-    partial class _201607261
+    [Migration("20160728185617_Initial")]
+    partial class Initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -96,6 +96,8 @@ namespace AlterEgo.Migrations
                     b.Property<string>("Name");
 
                     b.Property<int>("ReadableBy");
+
+                    b.Property<int>("SortOrder");
 
                     b.HasKey("CategoryId");
 
@@ -215,15 +217,21 @@ namespace AlterEgo.Migrations
 
                     b.Property<string>("Description");
 
+                    b.Property<int?>("LatestPostPostId");
+
                     b.Property<string>("Name");
 
                     b.Property<int>("ReadableBy");
+
+                    b.Property<int>("SortOrder");
 
                     b.Property<int>("WritableBy");
 
                     b.HasKey("ForumId");
 
                     b.HasIndex("CategoryId");
+
+                    b.HasIndex("LatestPostPostId");
 
                     b.ToTable("Forums");
                 });
@@ -374,9 +382,13 @@ namespace AlterEgo.Migrations
 
                     b.Property<bool>("IsStickied");
 
+                    b.Property<DateTime>("LatestPostTime");
+
                     b.Property<DateTime>("ModifiedAt");
 
                     b.Property<string>("Name");
+
+                    b.Property<int>("Views");
 
                     b.HasKey("ThreadId");
 
@@ -532,6 +544,10 @@ namespace AlterEgo.Migrations
                         .WithMany("Forums")
                         .HasForeignKey("CategoryId")
                         .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("AlterEgo.Models.Post", "LatestPost")
+                        .WithMany()
+                        .HasForeignKey("LatestPostPostId");
                 });
 
             modelBuilder.Entity("AlterEgo.Models.Member", b =>

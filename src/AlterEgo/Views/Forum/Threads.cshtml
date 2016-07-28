@@ -53,6 +53,7 @@
             <tbody>
             @foreach (var thread in Model.Threads.OrderByDescending(thread => thread.IsStickied).ThenByDescending(thread => thread.LatestPostTime))
             {
+                var replies = (thread.Posts.Count - 1);
                 <tr>
                     <td>
                         @if (thread.IsStickied) { @Html.Raw("<span class=\"label label-default\">Sticky</span>") }
@@ -61,7 +62,7 @@
                         <small>Started by @thread.Author, at @thread.CreatedAt.ToString("g")</small>
                     </td>
                     <td>
-                        <small>@thread.Posts.Count replies</small><br/>
+                        <small>@replies replies</small><br/>
                         <small>@thread.Views views</small>
                     </td>
                     <td class="text-right">

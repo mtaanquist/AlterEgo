@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Builder;
+﻿using System;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -34,7 +35,6 @@ namespace AlterEgo
         {
             // Add framework services.
             services.AddDbContext<ApplicationDbContext>(options =>
-                //options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection"))
                 options.UseNpgsql(Configuration.GetConnectionString("PostgreSqlConnection")));
 
             services.AddIdentity<ApplicationUser, IdentityRole>(options =>
@@ -78,6 +78,17 @@ namespace AlterEgo
             {
                 app.UseExceptionHandler("/Home/Error");
             }
+
+            app.Use(next => context =>
+            {
+                if (string.Equals(context.Request.Headers["X-Forwarded-Proto"], "https",
+                    StringComparison.OrdinalIgnoreCase))
+                {
+                    context.Request.Scheme = "https";
+                }
+
+                return next(context);
+            });
 
             app.UseStaticFiles();
             app.UseIdentity();
