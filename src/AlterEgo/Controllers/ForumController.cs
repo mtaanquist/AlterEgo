@@ -117,7 +117,7 @@ namespace AlterEgo.Controllers
             {
                 Forum = forum,
                 ForumId = forum.ForumId,
-                Name = model.ThreadSubject,
+                Name = model.Subject,
                 CreatedAt = postDateTime,
                 AuthorUserId = author.Id,
                 Author = author,
@@ -128,7 +128,7 @@ namespace AlterEgo.Controllers
             var post = new Post
             {
                 Thread = thread,
-                Content = model.PostContent,
+                Content = model.Content,
                 PostedAt = postDateTime,
                 AuthorUserId = author.Id,
                 Author = author

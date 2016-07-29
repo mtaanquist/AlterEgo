@@ -1,4 +1,3 @@
-using Ganss.XSS;
 using Markdig;
 
 namespace AlterEgo.Helpers
@@ -7,13 +6,18 @@ namespace AlterEgo.Helpers
     {
         public static string Transform(string text)
         {
-            var pipeline = new MarkdownPipelineBuilder().UseAdvancedExtensions().Build();
+            if (string.IsNullOrEmpty(text))
+                return string.Empty;
+
+            var pipeline = new MarkdownPipelineBuilder()
+                .DisableHtml()
+                .UseMediaLinks()
+                .UseAdvancedExtensions()
+                .Build();
+            
             var transformedText = Markdown.ToHtml(text, pipeline);
 
-            var sanitizer = new HtmlSanitizer();
-            var sanitizedText = sanitizer.Sanitize(transformedText);
-
-            return sanitizedText;
+            return transformedText;
         }
     }
 }

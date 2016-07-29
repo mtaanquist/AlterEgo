@@ -34,7 +34,7 @@
                                             <form asp-controller="Forum" asp-action="NewCategory" asp-antiforgery="true" role="form">
                                                 <div class="form-group">
                                                     <label asp-for="CategoryName">Name of category</label>
-                                                    <input asp-for="CategoryName" class="form-control" />
+                                                    <input asp-for="CategoryName" class="form-control"/>
                                                 </div>
                                                 <div class="form-group">
                                                     <label asp-for="CategoryName">Who can see this category?</label>
@@ -57,13 +57,13 @@
                                                 </div>
                                                 <div class="form-group">
                                                     <label asp-for="ForumName">Name of forum</label>
-                                                    <input asp-for="ForumName" class="form-control" />
+                                                    <input asp-for="ForumName" class="form-control"/>
                                                 </div>
                                                 <div class="form-group">
                                                     <label asp-for="ForumName">Forum description</label>
-                                                    <input asp-for="ForumDescription" class="form-control" />
+                                                    <input asp-for="ForumDescription" class="form-control"/>
                                                 </div>
-                                                <br />
+                                                <br/>
                                                 <h4>Permissions</h4>
                                                 <p>Set who can read and write in the forum.</p>
                                                 <div class="form-group">
@@ -88,3 +88,7 @@
         </div>
     </div>
 </div>
+
+@section Scripts {
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+}

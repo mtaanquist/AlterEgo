@@ -11,17 +11,19 @@
             The text editor uses <a href="//en.wikipedia.org/wiki/Markdown">Markdown</a> to help format your post. Any BBCode from other places will not work.
         </p>
 
-        <form asp-controller="Forum" asp-action="NewThread" asp-antiforgery="true" role="form">
+        <form id="new-thread-form" asp-controller="Forum" asp-action="NewThread" asp-antiforgery="true" role="form">
             <input asp-for="ForumId" value="@Model.Forum.ForumId" type="hidden"/>
 
             <div class="form-group form-group-lg">
-                <label asp-for="ThreadSubject">Subject</label>
-                <input asp-for="ThreadSubject" class="form-control"/>
+                <label asp-for="Subject">Subject</label>
+                <input asp-for="Subject" class="form-control"/>
+                <span asp-validation-for="Subject"></span>
             </div>
 
             <div class="form-group">
-                <label asp-for="PostContent" class="sr-only"></label>
-                <textarea asp-for="PostContent" class="form-control" rows="12"></textarea>
+                <label asp-for="Content" class="sr-only"></label>
+                <textarea asp-for="Content" class="form-control" rows="12"></textarea>
+                <span asp-validation-for="Content"></span>
             </div>
 
             <div class="checkbox">
@@ -44,3 +46,7 @@
         </form>
     </div>
 </div>
+
+@section Scripts {
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+}

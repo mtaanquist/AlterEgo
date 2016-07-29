@@ -11,11 +11,11 @@ namespace AlterEgo.Models.ForumViewModels
         [Required]
         [MinLength(3)]
         [DisplayName("Subject")]
-        public string ThreadSubject { get; set; }
+        public string Subject { get; set; }
         [Required]
         [MinLength(3)]
         [DisplayName("Content")]
-        public string PostContent { get; set; }
+        public string Content { get; set; }
 
         public bool StickyThread { get; set; }
         public bool LockThread { get; set; }
