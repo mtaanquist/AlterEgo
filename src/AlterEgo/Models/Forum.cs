@@ -14,6 +14,8 @@ namespace AlterEgo.Models
         public int CanEditThreads { get; set; }
         public int CanDeleteThreads { get; set; }
 
+        public bool IsDeleted { get; set; }
+
         public int SortOrder { get; set; }
 
         public int CategoryId { get; set; }

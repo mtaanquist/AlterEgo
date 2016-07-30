@@ -11,6 +11,7 @@ namespace AlterEgo.Models
 
         public int ReadableBy { get; set; }
 
+        public bool IsDeleted { get; set; }
         
         public List<Forum> Forums { get; set; }
     }

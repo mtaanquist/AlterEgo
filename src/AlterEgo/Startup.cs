@@ -13,6 +13,7 @@ using AlterEgo.Models;
 using AlterEgo.Services;
 using AspNet.Security.OAuth.BattleNet;
 using Microsoft.AspNetCore.Localization;
+using Sakura.AspNetCore.Mvc;
 
 namespace AlterEgo
 {
@@ -52,6 +53,11 @@ namespace AlterEgo
             services.AddRouting(options =>
             {
                 options.LowercaseUrls = true;
+            });
+
+            services.AddBootstrapPagerGenerator(options => 
+            {
+                options.ConfigureDefault();
             });
 
             // Add scoped services

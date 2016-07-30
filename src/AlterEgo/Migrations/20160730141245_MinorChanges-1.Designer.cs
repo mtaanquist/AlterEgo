@@ -8,8 +8,8 @@ using AlterEgo.Data;
 namespace AlterEgo.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20160728185617_Initial")]
-    partial class Initial
+    [Migration("20160730141245_MinorChanges-1")]
+    partial class MinorChanges1
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -328,6 +328,8 @@ namespace AlterEgo.Migrations
                     b.Property<string>("EditorId");
 
                     b.Property<int>("EditorUserId");
+
+                    b.Property<bool>("IsFirstPost");
 
                     b.Property<DateTime>("PostedAt");
 

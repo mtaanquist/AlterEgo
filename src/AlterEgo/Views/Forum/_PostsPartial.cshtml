@@ -1,0 +1,68 @@
+﻿@model Sakura.AspNetCore.IPagedList<Post>
+
+@inject UserManager<ApplicationUser> UserManager
+
+@{
+    var postCount = 1 + (((int)ViewBag.Page - 1) * 25);
+}
+<div class="row" id="posts-display">
+    <div class="col-lg-12">
+        @foreach (var post in Model)
+            {
+                var panelClass = "panel";
+                if (post.IsFirstPost)
+                {
+                    panelClass += " panel-c-white";
+                }
+                else if (post.Author.GuildRank < 2)
+                {
+                    panelClass += " panel-c-info";
+                }
+                if (postCount % 2 != 0)
+                {
+                    panelClass += " panel-filled";
+                }
+
+                <div class="@Html.Raw(panelClass)" id="@Html.Raw($"post{post.PostId}")">
+                    <div class="panel-heading">
+                        @post.Author, at @post.PostedAt.ToString("G")
+                        <span class="pull-right">
+                            <a href="#@Html.Raw($"post{post.PostId}")">Post #@postCount</a>
+                        </span>
+                    </div>
+                    <div class="panel-body">
+                        @Html.Raw(post.FormattedContent)
+
+                        @if (post.EditedAt > DateTime.MinValue)
+                        {
+                            <br />
+                            <small>
+                                <em><i class="fa fa-exclamation-triangle" aria-hidden="true"></i> Edited by @post.Editor, at @post.EditedAt.ToString("g")</em>
+                            </small>
+                        }
+                    </div>
+                    <div class="panel-footer">
+
+                        <div class="text-right">
+                            @*<button type="button" class="btn btn-sm btn-default">Quote</button>*@
+                            @if (UserManager.GetUserName(User).Equals(post.Author.ToString()))
+                            {
+                                if (post.IsFirstPost)
+                                {
+                                    <a asp-controller="Forum" asp-action="EditThread" asp-route-id="@post.ThreadId" class="btn btn-sm btn-default">Edit</a>
+                                }
+                                else
+                                {
+                                    <a asp-controller="Forum" asp-action="EditPost" asp-route-id="@post.PostId" class="btn btn-sm btn-default">Edit</a>
+                                }
+                            }
+                        </div>
+                    </div>
+                </div>
+
+            postCount++;
+        }
+    </div>
+</div>
+
+<pager source="Model" />

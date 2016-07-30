@@ -9,6 +9,8 @@ namespace AlterEgo.Models
         public string Content { get; set; }
         [NotMapped]
         public string FormattedContent { get; set; }
+        public bool IsFirstPost { get; set; }
+        public bool IsDeleted { get; set; }
 
         public string AuthorUserId { get; set; }
         public ApplicationUser Author { get; set; }

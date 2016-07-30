@@ -1,0 +1,51 @@
+﻿@model Sakura.AspNetCore.IPagedList<Thread>
+
+    <div class="row">
+        <div class="col-lg-12">
+            <table class="table table-hover table-striped">
+                @*<thead>
+                    <tr>
+                        <th ></th>
+                        <th ></th>
+                        <th class=""></th>
+                    </tr>
+                </thead>*@
+                <tbody>
+                    @foreach (var thread in Model)
+                    {
+                        var replies = (thread.Posts.Count - 1);
+                        <tr>
+                            <td class="col-lg-7">
+                                @if (thread.IsStickied)
+                                { @Html.Raw("<span class=\"label label-default\">Sticky</span>") }
+                                @if (thread.IsLocked)
+                                { @Html.Raw("<span class=\"label label-default pull-right\">Locked</span>") }
+                                <a asp-controller="Forum" asp-action="Thread" asp-route-id="@thread.ThreadId">@thread.Name</a><br />
+                                <small>Started by @thread.Author, at @thread.CreatedAt.ToString("g")</small>
+                            </td>
+                            <td class="col-lg-2">
+                                <small>@replies replies</small><br />
+                                <small>@thread.Views views</small>
+                            </td>
+                            <td class="col-lg-3 text-right">
+                                @{
+                                    var latestPost = thread.Posts.OrderByDescending(post => post.PostedAt).First();
+                                }
+                                @if (latestPost != null)
+                                {
+                                    @latestPost.Author <a asp-controller="Forum" asp-action="LatestPost" asp-route-id="@latestPost.ThreadId" title="Go to latest post"><i class="fa fa-chevron-circle-right" aria-hidden="true"></i></a><br />
+                                    <abbr class="timeago" title="@latestPost.PostedAt.ToString("O")">@latestPost.PostedAt.ToString("g")</abbr>
+                                }
+                                else
+                                {
+                                    <em>No replies found</em>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <pager source="Model" />

@@ -8,9 +8,10 @@ using AlterEgo.Data;
 namespace AlterEgo.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20160730094617_Initial")]
+    partial class Initial
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
             modelBuilder
                 .HasAnnotation("ProductVersion", "1.0.0-rtm-21431");
@@ -91,8 +92,6 @@ namespace AlterEgo.Migrations
                 {
                     b.Property<int>("CategoryId")
                         .ValueGeneratedOnAdd();
-
-                    b.Property<bool>("IsDeleted");
 
                     b.Property<string>("Name");
 
@@ -218,8 +217,6 @@ namespace AlterEgo.Migrations
 
                     b.Property<string>("Description");
 
-                    b.Property<bool>("IsDeleted");
-
                     b.Property<int?>("LatestPostPostId");
 
                     b.Property<string>("Name");
@@ -331,10 +328,6 @@ namespace AlterEgo.Migrations
                     b.Property<string>("EditorId");
 
                     b.Property<int>("EditorUserId");
-
-                    b.Property<bool>("IsDeleted");
-
-                    b.Property<bool>("IsFirstPost");
 
                     b.Property<DateTime>("PostedAt");
 

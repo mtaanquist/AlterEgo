@@ -21,11 +21,26 @@
     <div class="col-lg-12">
         <div class="view-header">
             <div class="header-icon">
-                <i class="pe page-header-icon pe-7s-news-paper"></i>
+                @{
+                    string icon;
+                    if (Model.Thread.IsStickied)
+                    {
+                        icon = "pe-7s-pin";
+                    }
+                    else if (Model.Thread.IsLocked)
+                    {
+                        icon = "pe-7s-lock";
+                    }
+                    else
+                    {
+                        icon = "pe-7s-news-paper";
+                    }
+                }
+                <i class="pe page-header-icon @icon"></i>
             </div>
 
             <div class="header-title">
-                <h2>@Model.Thread.Name</h2>
+                <h2>@Model.Thread.Name </h2>
                 <small>
                     Started by @Model.Thread.Author, at @Model.Thread.CreatedAt.ToString("G")
                 </small>
@@ -36,93 +51,45 @@
 </div>
 
 <div class="row">
-    <div class="col-lg-12">
+    <div class="col-lg-6 pull-left">
+        @{
+            var stickyAction = (Model.Thread.IsStickied) ? "UnstickyThread" : "StickyThread";
+            var stickyLinkText = (Model.Thread.IsStickied) ? "Unsticky" : "Sticky";
+
+            var lockAction = (Model.Thread.IsLocked) ? "UnlockThread" : "LockThread";
+            var lockLinkText = (Model.Thread.IsLocked) ? "Unlock" : "Lock";
+        }
+
+        <a asp-controller="Forum" asp-action="@stickyAction" asp-route-id="@Model.Thread.ThreadId" class="btn btn-warning">@stickyLinkText</a>
+        <a asp-controller="Forum" asp-action="@lockAction" asp-route-id="@Model.Thread.ThreadId" class="btn btn-warning">@lockLinkText</a>
+        <a asp-controller="Forum" asp-action="DeleteThread" asp-route-id="@Model.Thread.ThreadId" class="btn btn-danger">Delete Thread</a>
+    </div>
+    <div class="col-lg-6 pull-right">
         @if (Model.Thread.IsLocked)
         {
-            <p class="pull-right">
-                <button type="button" class="btn btn-default" disabled="disabled">Thread Locked</button>
-            </p>
+            <button type="button" class="btn btn-default" disabled="disabled">Thread Locked</button>
+
         }
         else
         {
-            <p class="pull-right">
-                <a asp-controller="Forum" asp-action="NewReply" asp-route-id="@Model.Thread.ThreadId" class="btn btn-default">Post New Reply</a>
-            </p>
+
+            <a asp-controller="Forum" asp-action="NewReply" asp-route-id="@Model.Thread.ThreadId" class="btn btn-default">Post New Reply</a>
+
         }
     </div>
 </div>
 
-@{
-    var postCount = 1;
-}
-<div class="row" id="posts-display">
-    <div class="col-lg-12">
-        @foreach (var post in Model.Thread.Posts.OrderBy(post => post.PostedAt))
-            {
-                var panelClass = "panel";
-                if (post.PostedAt.Equals(Model.Thread.CreatedAt))
-                {
-                    panelClass += " panel-c-white";
-                }
-                else if (post.Author.GuildRank < 2)
-                {
-                    panelClass += " panel-c-info";
-                }
-                if (postCount % 2 != 0)
-                {
-                    panelClass += " panel-filled";
-                }
-
-                <div class="@Html.Raw(panelClass)" id="@Html.Raw($"post{post.PostId}")">
-                    <div class="panel-heading">
-                        @post.Author, at @post.PostedAt.ToString("G")
-                        <span class="pull-right">
-                            <a href="#@Html.Raw($"post{post.PostId}")">Post #@postCount</a>
-                        </span>
-                    </div>
-                    <div class="panel-body">
-                        @Html.Raw(post.FormattedContent)
-
-                        @if (post.EditedAt > DateTime.MinValue)
-                        {
-                            <br />
-                            <small>
-                                <em><i class="fa fa-exclamation-triangle" aria-hidden="true"></i> Edited by @post.Editor, at @post.EditedAt.ToString("g")</em>
-                            </small>
-                        }
-                    </div>
-                    <div class="panel-footer">
-
-                        <div class="text-right">
-                            @*<button type="button" class="btn btn-sm btn-default">Quote</button>*@
-                            @if (UserManager.GetUserName(User).Equals(post.Author.ToString()))
-                            {
-                                if (post.PostedAt == Model.Thread.CreatedAt)
-                                {
-                                    <a asp-controller="Forum" asp-action="EditThread" asp-route-id="@Model.Thread.ThreadId" class="btn btn-sm btn-default">Edit</a>
-                                }
-                                else
-                                {
-                                    <a asp-controller="Forum" asp-action="EditPost" asp-route-id="@post.PostId" class="btn btn-sm btn-default">Edit</a>
-                                }
-                            }
-                        </div>
-                    </div>
-                </div>
-
-            postCount++;
-        }
-    </div>
-</div>
+<br />
+@await Html.PartialAsync("_PostsPartial", Model.PagedPosts)
 
 @if (!Model.Thread.IsLocked)
 {
     <div class="row">
         <div class="col-lg-12">
-            <hr/>
+            <hr />
             <h4>Reply to this thread</h4>
             <form asp-controller="Forum" asp-action="NewReply" asp-antiforgery="true" role="form">
-                <input asp-for="ThreadId" value="@Model.Thread.ThreadId" type="hidden"/>
+                <input asp-for="ThreadId" value="@Model.Thread.ThreadId" type="hidden" />
 
                 <div class="form-group">
                     <label asp-for="Content" class="sr-only"></label>

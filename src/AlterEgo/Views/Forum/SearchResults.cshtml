@@ -1,0 +1,87 @@
+﻿@model AlterEgo.Models.ForumViewModels.SearchResultsViewModel
+
+@{
+    ViewBag.Title = "Search Results";
+
+    var totalResults = 0;
+    if (Model.FoundThreads.Any())
+    {
+        totalResults = Model.FoundThreads.Count;
+    }
+}
+
+<div class="row">
+    <div class="col-lg-12">
+        <ol class="breadcrumb">
+            <li><a asp-controller="Home" asp-action="Index">Alter Ego</a></li>
+            <li><a asp-controller="Forum" asp-action="Index">Forum</a></li>
+            <li class="active">Search Results</li>
+        </ol>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-12">
+        <div class="view-header">
+            <div class="header-icon">
+                <i class="pe page-header-icon pe-7s-search"></i>
+            </div>
+
+            <div class="header-title">
+                <h2>Search Results</h2>
+                <small>
+                    Your search term <em><strong>@ViewBag.SearchTerm</strong></em> returned <strong>@totalResults</strong> results.
+                </small>
+            </div>
+        </div>
+        <hr />
+    </div>
+</div>
+
+@await Html.PartialAsync("_SearchPartial")
+
+<div class="row">
+    <div class="col-lg-12">
+        <br />
+        <div class="tabs-container">
+            <div class="tabs-left">
+                <ul class="nav nav-tabs">
+                    <li class="active">
+                        <a data-toggle="tab" href="#threads">
+                            Threads
+                            @if (Model.FoundThreads.Any())
+                            { 
+                                <span class="badge">
+                                    @Model.FoundThreads.Count
+                                </span>
+                            }
+                        </a>
+                    </li>
+                </ul>
+                <div class="tab-content ">
+                    <div id="threads" class="tab-pane active">
+                        <div class="panel-body">
+                            @if (Model.FoundThreads.Any())
+                            {
+                                @await Html.PartialAsync("_ThreadsPartial", Model.PagedFoundThreads)
+                            }
+                            else
+                            {
+                                if (ViewBag.SearchTerm.Length < 3)
+                                {
+                                    <div class="alert alert-danger" role="alert">
+                                        <strong>Unable to perform search.</strong> The search term "@ViewBag.SearchTerm" is too short. Please expand your query.
+                                    </div>
+                                }
+                                else
+                                {
+                                    <p>No results found.</p>
+                                }
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
