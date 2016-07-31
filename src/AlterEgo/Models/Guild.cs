@@ -23,8 +23,6 @@ namespace AlterEgo.Models
 
     public sealed class News
     {
-        public int NewsId { get; set; }
-
         // Foreign Keys
         public string GuildName { get; set; }
         public string GuildRealm { get; set; }

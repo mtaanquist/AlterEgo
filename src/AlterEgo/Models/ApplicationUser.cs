@@ -7,7 +7,15 @@ namespace AlterEgo.Models
     // Add profile data for application users by adding properties to the ApplicationUser class
     public class ApplicationUser : IdentityUser
     {
+        // Access Token stuff
+        public string AccessToken { get; set; }
+        public string AccessTokenExpiry { get; set;}
+
         public int GuildRank { get; set; }
+
+        // Permission helpers, not mapped
+        [NotMapped]
+        public bool IsModerator => (GuildRank < 4);
 
         public List<Character> Characters { get; set; }
         

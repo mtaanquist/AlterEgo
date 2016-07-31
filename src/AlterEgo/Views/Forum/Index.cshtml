@@ -24,12 +24,13 @@
 
                     <div class="view-header">
                         <div class="pull-right text-right hidden-xs" style="line-height: 14px">
-                            @if (forum.LatestPost != null)
+                            @if (Model.LatestPosts != null)
                             {
+                                var latestPost = Model.LatestPosts[forum.ForumId];
                                 <small>
-                                    <a asp-controller="Forum" asp-action="LatestPost" asp-route-id="@forum.LatestPost.Thread.ThreadId">@forum.LatestPost.Thread.Name</a><br />
-                                    By @forum.LatestPost.Author<br />
-                                    <span class="c-white">@forum.LatestPost.PostedAt.ToString("g")</span>
+                                    <a asp-controller="Forum" asp-action="LatestPost" asp-route-id="@latestPost.Thread.ThreadId">@latestPost.Thread.Name</a><br />
+                                    By @latestPost.Author<br />
+                                    <span class="c-white">@latestPost.PostedAt.ToString("g")</span>
                                 </small>
                             }
                             else

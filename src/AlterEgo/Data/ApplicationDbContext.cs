@@ -32,6 +32,9 @@ namespace AlterEgo.Data
             builder.Entity<Member>()
                 .HasKey(m => new { m.GuildName, m.GuildRealm, m.CharacterName, m.CharacterRealm });
 
+            builder.Entity<News>()
+                .HasKey(n => new { n.Timestamp, n.Character });
+
             // Define relations
             builder.Entity<Guild>()
                 .HasMany(g => g.News)

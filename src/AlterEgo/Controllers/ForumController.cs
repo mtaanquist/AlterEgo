@@ -37,17 +37,25 @@ namespace AlterEgo.Controllers
                         .Include(category => category.Forums)
                             .ThenInclude(forum => forum.Threads)
                             .ThenInclude(thread => thread.Posts)
-                        .Include(category => category.Forums)
-                            .ThenInclude(forum => forum.LatestPost)
-                            .ThenInclude(post => post.Thread)
-                        .Include(category => category.Forums)
-                            .ThenInclude(forum => forum.LatestPost)
-                            .ThenInclude(post => post.Author)
                         .ToListAsync();
+
+            var latestPosts = new Dictionary<int, Post>();
+            categories.ForEach(c => c.Forums.ForEach(f => 
+            {
+                var latestPost = _context.Posts
+                    .Include(p => p.Thread).ThenInclude(t => t.Forum)
+                    .Include(p => p.Author)
+                    .Where(p => p.Thread.Forum.ForumId == f.ForumId)
+                    .OrderBy(p => p.PostId)
+                    .LastOrDefault();
+
+                latestPosts.Add(f.ForumId, latestPost);
+            }));
 
             var model = new IndexViewModel
             {
-                Categories = categories
+                Categories = categories,
+                LatestPosts = latestPosts
             };
 
             return View(model);
@@ -95,7 +103,6 @@ namespace AlterEgo.Controllers
         // GET: /forum/threads/4
         public async Task<IActionResult> Threads(int id, int? page)
         {
-
             var threads =
                 await
                     _context.Threads.Include(t => t.Author)
@@ -103,7 +110,8 @@ namespace AlterEgo.Controllers
                         .Include(t => t.Posts)
                             .ThenInclude(post => post.Author)
                         .Where(thread => thread.ForumId == id && !thread.IsDeleted)
-                        .OrderByDescending(t => t.IsStickied).ThenByDescending(t => t.LatestPostTime)
+                        .OrderByDescending(t => t.IsStickied)
+                        .ThenByDescending(t => t.Posts.Where(p => !p.IsDeleted).Max(x => x.PostId))
                         .ToListAsync();
 
             var forum = await _context.Forums.Include(f => f.Category).SingleOrDefaultAsync(f => f.ForumId == id);
@@ -195,9 +203,6 @@ namespace AlterEgo.Controllers
                 Author = author,
                 IsFirstPost = true
             };
-
-            thread.LatestPostTime = postDateTime;
-            forum.LatestPost = post;
 
             _context.Threads.Add(thread);
             _context.Posts.Add(post);
@@ -333,9 +338,6 @@ namespace AlterEgo.Controllers
                 PostedAt = postDateTime
             };
 
-            thread.LatestPostTime = postDateTime;
-            forum.LatestPost = post;
-
             _context.Posts.Add(post);
             _context.Threads.Update(thread);
             _context.Forums.Update(forum);
@@ -421,6 +423,20 @@ namespace AlterEgo.Controllers
         {
             var thread = await _context.Threads.SingleOrDefaultAsync(t => t.ThreadId == id);
             thread.IsDeleted = true;
+
+            //// Have to updated the latest post/thread navigation properties
+            //var forum = await _context.Forums.Include(f => f.LatestPost)
+            //    .SingleOrDefaultAsync(f => f.ForumId == thread.ForumId);
+            //if (forum.LatestPost.ThreadId == id)
+            //{
+            //    var latestPost = await _context.Posts.Include(p => p.Thread).ThenInclude(t => t.Forum)
+            //        .Where(p => p.Thread.ForumId == forum.ForumId)
+            //        .OrderBy(p => p.PostId).LastOrDefaultAsync();
+
+            //    forum.LatestPost = latestPost;
+            //    _context.Forums.Update(forum);
+            //}
+
             _context.Threads.Update(thread);
             await _context.SaveChangesAsync();
 
@@ -452,8 +468,6 @@ namespace AlterEgo.Controllers
             var thread = await _context.Threads.SingleOrDefaultAsync(t => t.ThreadId == id);
             thread.IsStickied = false;
 
-            // Have to updated the latest post/thread navigation properties
-
             _context.Threads.Update(thread);
             await _context.SaveChangesAsync();
 
@@ -462,15 +476,26 @@ namespace AlterEgo.Controllers
 
         public async Task<IActionResult> DeletePost(int id)
         {
-            var post = await _context.Posts.SingleOrDefaultAsync(p => p.PostId == id);
+            var post = await _context.Posts.Include(p => p.Thread).ThenInclude(t => t.Forum)
+                .SingleOrDefaultAsync(p => p.PostId == id);
             post.IsDeleted = true;
 
-            // Have to updated the latest post/thread navigation properties
+            //// Have to updated the latest post/thread navigation properties
+            //if (post.Thread.Forum.LatestPost.PostId == post.PostId)
+            //{
+            //    var forum = post.Thread.Forum;
+            //    var latestPost = await _context.Posts.Include(p => p.Thread).ThenInclude(t => t.Forum)
+            //        .Where(p => p.Thread.ForumId == forum.ForumId)
+            //        .OrderBy(p => p.PostId).LastOrDefaultAsync();
+
+            //    forum.LatestPost = latestPost;
+            //    _context.Forums.Update(forum);
+            //}
 
             _context.Posts.Update(post);
             await _context.SaveChangesAsync();
 
-            return RedirectToAction(nameof(Thread), new { id });
+            return RedirectToAction(nameof(Thread), new { id = post.ThreadId });
         }
 
         #endregion

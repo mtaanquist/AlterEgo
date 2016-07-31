@@ -8,9 +8,10 @@ using AlterEgo.Data;
 namespace AlterEgo.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20160731072656_Sunday")]
+    partial class Sunday
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
             modelBuilder
                 .HasAnnotation("ProductVersion", "1.0.0-rtm-21431");
@@ -41,10 +42,6 @@ namespace AlterEgo.Migrations
                     b.Property<string>("Id");
 
                     b.Property<int>("AccessFailedCount");
-
-                    b.Property<string>("AccessToken");
-
-                    b.Property<string>("AccessTokenExpiry");
 
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken();
@@ -281,11 +278,12 @@ namespace AlterEgo.Migrations
 
             modelBuilder.Entity("AlterEgo.Models.News", b =>
                 {
-                    b.Property<long>("Timestamp");
-
-                    b.Property<string>("Character");
+                    b.Property<int>("NewsId")
+                        .ValueGeneratedOnAdd();
 
                     b.Property<int?>("AchievementId");
+
+                    b.Property<string>("Character");
 
                     b.Property<string>("Context");
 
@@ -299,9 +297,11 @@ namespace AlterEgo.Migrations
 
                     b.Property<int>("ItemId");
 
+                    b.Property<long>("Timestamp");
+
                     b.Property<string>("Type");
 
-                    b.HasKey("Timestamp", "Character");
+                    b.HasKey("NewsId");
 
                     b.HasIndex("AchievementId");
 

@@ -4,6 +4,7 @@
 
 @{
     ViewBag.Title = $"{Model.Thread.Name} - {Model.Thread.Forum.Name}";
+    var currentUser = await UserManager.GetUserAsync(User);
 }
 
 <div class="row">
@@ -59,22 +60,20 @@
             var lockAction = (Model.Thread.IsLocked) ? "UnlockThread" : "LockThread";
             var lockLinkText = (Model.Thread.IsLocked) ? "Unlock" : "Lock";
         }
-
-        <a asp-controller="Forum" asp-action="@stickyAction" asp-route-id="@Model.Thread.ThreadId" class="btn btn-warning">@stickyLinkText</a>
-        <a asp-controller="Forum" asp-action="@lockAction" asp-route-id="@Model.Thread.ThreadId" class="btn btn-warning">@lockLinkText</a>
-        <a asp-controller="Forum" asp-action="DeleteThread" asp-route-id="@Model.Thread.ThreadId" class="btn btn-danger">Delete Thread</a>
+        @if (currentUser.IsModerator) { 
+            <a asp-controller="Forum" asp-action="@stickyAction" asp-route-id="@Model.Thread.ThreadId" class="btn btn-warning">@stickyLinkText</a>
+            <a asp-controller="Forum" asp-action="@lockAction" asp-route-id="@Model.Thread.ThreadId" class="btn btn-warning">@lockLinkText</a>
+            <a asp-controller="Forum" asp-action="DeleteThread" asp-route-id="@Model.Thread.ThreadId" class="btn btn-danger">Delete Thread</a>
+        }
     </div>
     <div class="col-lg-6 pull-right">
         @if (Model.Thread.IsLocked)
         {
             <button type="button" class="btn btn-default" disabled="disabled">Thread Locked</button>
-
         }
         else
         {
-
             <a asp-controller="Forum" asp-action="NewReply" asp-route-id="@Model.Thread.ThreadId" class="btn btn-default">Post New Reply</a>
-
         }
     </div>
 </div>

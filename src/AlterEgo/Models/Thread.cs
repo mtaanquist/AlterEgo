@@ -26,7 +26,5 @@ namespace AlterEgo.Models
 
         public int ForumId { get; set; }
         public Forum Forum { get; set; }
-
-        public DateTime LatestPostTime { get; set; }
     }
 }

@@ -53,7 +53,8 @@
     "Markdig": "0.7.3",
     "Sakura.AspNetCore.Mvc.PagedList": "2.0.6",
     "Sakura.AspNetCore.PagedList.Async": "1.0.0",
-    "Sakura.AspNetCore.PagedList": "2.0.0"
+    "Sakura.AspNetCore.PagedList": "2.0.0",
+    "Microsoft.EntityFrameworkCore": "1.0.0"
   },
 
   "tools": {

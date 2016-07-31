@@ -4,6 +4,7 @@
 
 @{
     var postCount = 1 + (((int)ViewBag.Page - 1) * 25);
+    var currentUser = await UserManager.GetUserAsync(User);
 }
 <div class="row" id="posts-display">
     <div class="col-lg-12">
@@ -44,12 +45,19 @@
                     <div class="panel-footer">
 
                         <div class="text-right">
+                            @if (currentUser.IsModerator)
+                            {
+                                if (!post.IsFirstPost)
+                                {
+                                    <a asp-controller="Forum" asp-action="DeletePost" asp-route-id="@post.PostId" class="btn btn-sm btn-danger">Delete</a>
+                                }
+                            }
                             @*<button type="button" class="btn btn-sm btn-default">Quote</button>*@
-                            @if (UserManager.GetUserName(User).Equals(post.Author.ToString()))
+                            @if (UserManager.GetUserName(User).Equals(post.Author.ToString()) || currentUser.IsModerator)
                             {
                                 if (post.IsFirstPost)
                                 {
-                                    <a asp-controller="Forum" asp-action="EditThread" asp-route-id="@post.ThreadId" class="btn btn-sm btn-default">Edit</a>
+                                    <a asp-controller="Forum" asp-action="EditThread" asp-route-id="@post.ThreadId" class="btn btn-sm btn-default">Edit Thread</a>
                                 }
                                 else
                                 {
