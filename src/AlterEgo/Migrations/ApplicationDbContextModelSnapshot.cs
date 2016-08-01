@@ -54,7 +54,7 @@ namespace AlterEgo.Migrations
 
                     b.Property<bool>("EmailConfirmed");
 
-                    b.Property<int>("GuildRank");
+                    b.Property<DateTime>("LastActivity");
 
                     b.Property<bool>("LockoutEnabled");
 
@@ -71,6 +71,10 @@ namespace AlterEgo.Migrations
                     b.Property<string>("PhoneNumber");
 
                     b.Property<bool>("PhoneNumberConfirmed");
+
+                    b.Property<int>("Rank");
+
+                    b.Property<DateTime>("RegisteredAt");
 
                     b.Property<string>("SecurityStamp");
 
@@ -117,8 +121,6 @@ namespace AlterEgo.Migrations
 
                     b.Property<int>("AchievementPoints");
 
-                    b.Property<string>("ApplicationUserId");
-
                     b.Property<string>("Battlegroup");
 
                     b.Property<int?>("CharacterClassId");
@@ -143,29 +145,25 @@ namespace AlterEgo.Migrations
 
                     b.Property<string>("MemberCharacterRealm");
 
-                    b.Property<string>("MemberGuildName");
-
-                    b.Property<string>("MemberGuildRealm");
-
-                    b.Property<int>("PlayerId");
-
-                    b.Property<string>("PlayerId1");
-
                     b.Property<int>("Race");
 
                     b.Property<string>("Thumbnail");
 
-                    b.HasKey("Name", "Realm");
+                    b.Property<string>("UserId");
 
-                    b.HasIndex("ApplicationUserId");
+                    b.Property<string>("UserId1");
+
+                    b.HasKey("Name", "Realm");
 
                     b.HasIndex("CharacterClassId");
 
                     b.HasIndex("CharacterRaceId");
 
-                    b.HasIndex("PlayerId1");
+                    b.HasIndex("UserId");
 
-                    b.HasIndex("MemberGuildName", "MemberGuildRealm", "MemberCharacterName", "MemberCharacterRealm")
+                    b.HasIndex("UserId1");
+
+                    b.HasIndex("MemberCharacterName", "MemberCharacterRealm")
                         .IsUnique();
 
                     b.ToTable("Characters");
@@ -262,21 +260,21 @@ namespace AlterEgo.Migrations
 
             modelBuilder.Entity("AlterEgo.Models.Member", b =>
                 {
-                    b.Property<string>("GuildName");
-
-                    b.Property<string>("GuildRealm");
-
                     b.Property<string>("CharacterName");
 
                     b.Property<string>("CharacterRealm");
 
+                    b.Property<string>("GuildName");
+
+                    b.Property<string>("GuildRealm");
+
                     b.Property<int>("Rank");
 
-                    b.HasKey("GuildName", "GuildRealm", "CharacterName", "CharacterRealm");
+                    b.HasKey("CharacterName", "CharacterRealm");
 
                     b.HasIndex("GuildName", "GuildRealm");
 
-                    b.ToTable("Member");
+                    b.ToTable("Members");
                 });
 
             modelBuilder.Entity("AlterEgo.Models.News", b =>
@@ -403,6 +401,26 @@ namespace AlterEgo.Migrations
                     b.ToTable("Threads");
                 });
 
+            modelBuilder.Entity("AlterEgo.Models.ThreadActivity", b =>
+                {
+                    b.Property<int>("ThreadActivityId")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<string>("ApplicationUserId");
+
+                    b.Property<DateTime>("LastRead");
+
+                    b.Property<int>("LastReadPostId");
+
+                    b.Property<int>("ThreadId");
+
+                    b.HasKey("ThreadActivityId");
+
+                    b.HasIndex("ApplicationUserId");
+
+                    b.ToTable("ThreadActivities");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.EntityFrameworkCore.IdentityRole", b =>
                 {
                     b.Property<string>("Id");
@@ -512,10 +530,6 @@ namespace AlterEgo.Migrations
 
             modelBuilder.Entity("AlterEgo.Models.Character", b =>
                 {
-                    b.HasOne("AlterEgo.Models.ApplicationUser")
-                        .WithMany("Characters")
-                        .HasForeignKey("ApplicationUserId");
-
                     b.HasOne("AlterEgo.Models.Class", "CharacterClass")
                         .WithMany()
                         .HasForeignKey("CharacterClassId");
@@ -524,13 +538,17 @@ namespace AlterEgo.Migrations
                         .WithMany()
                         .HasForeignKey("CharacterRaceId");
 
-                    b.HasOne("AlterEgo.Models.ApplicationUser", "Player")
+                    b.HasOne("AlterEgo.Models.ApplicationUser")
+                        .WithMany("Characters")
+                        .HasForeignKey("UserId");
+
+                    b.HasOne("AlterEgo.Models.ApplicationUser", "User")
                         .WithMany()
-                        .HasForeignKey("PlayerId1");
+                        .HasForeignKey("UserId1");
 
                     b.HasOne("AlterEgo.Models.Member", "Member")
                         .WithOne("Character")
-                        .HasForeignKey("AlterEgo.Models.Character", "MemberGuildName", "MemberGuildRealm", "MemberCharacterName", "MemberCharacterRealm");
+                        .HasForeignKey("AlterEgo.Models.Character", "MemberCharacterName", "MemberCharacterRealm");
                 });
 
             modelBuilder.Entity("AlterEgo.Models.Criteria", b =>
@@ -550,10 +568,9 @@ namespace AlterEgo.Migrations
 
             modelBuilder.Entity("AlterEgo.Models.Member", b =>
                 {
-                    b.HasOne("AlterEgo.Models.Guild", "Guild")
+                    b.HasOne("AlterEgo.Models.Guild")
                         .WithMany("Members")
-                        .HasForeignKey("GuildName", "GuildRealm")
-                        .OnDelete(DeleteBehavior.Cascade);
+                        .HasForeignKey("GuildName", "GuildRealm");
                 });
 
             modelBuilder.Entity("AlterEgo.Models.News", b =>
@@ -601,6 +618,13 @@ namespace AlterEgo.Migrations
                         .WithMany("Threads")
                         .HasForeignKey("ForumId")
                         .OnDelete(DeleteBehavior.Cascade);
+                });
+
+            modelBuilder.Entity("AlterEgo.Models.ThreadActivity", b =>
+                {
+                    b.HasOne("AlterEgo.Models.ApplicationUser", "ApplicationUser")
+                        .WithMany("ThreadActivities")
+                        .HasForeignKey("ApplicationUserId");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.EntityFrameworkCore.IdentityRoleClaim<string>", b =>

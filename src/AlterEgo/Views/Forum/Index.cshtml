@@ -6,9 +6,13 @@
 
 @{
     ViewBag.Title = "Forums";
+    var currentUser = await UserManager.GetUserAsync(User);
 }
 
-@Html.Partial("_AdminToolbox", new AdminToolboxViewModel { Categories = Model.Categories })
+@if (currentUser.IsModerator)
+{
+    @Html.Partial("_AdminToolbox", new AdminToolboxViewModel { Categories = Model.Categories })
+}
 
 @Html.Partial("_SearchPartial")
 
@@ -24,20 +28,23 @@
 
                     <div class="view-header">
                         <div class="pull-right text-right hidden-xs" style="line-height: 14px">
-                            @if (Model.LatestPosts != null)
+                            @if (Model.LatestPosts.Any())
                             {
                                 var latestPost = Model.LatestPosts[forum.ForumId];
-                                <small>
-                                    <a asp-controller="Forum" asp-action="LatestPost" asp-route-id="@latestPost.Thread.ThreadId">@latestPost.Thread.Name</a><br />
-                                    By @latestPost.Author<br />
-                                    <span class="c-white">@latestPost.PostedAt.ToString("g")</span>
-                                </small>
-                            }
-                            else
-                            {
-                                <small>
-                                    <em>No posts found</em>
-                                </small>
+                                if (latestPost != null)
+                                {
+                                    <small>
+                                        <a asp-controller="Forum" asp-action="LatestPost" asp-route-id="@latestPost.Thread.ThreadId">@latestPost.Thread.Name</a><br />
+                                        By @latestPost.Author<br />
+                                        <span class="c-white">@latestPost.PostedAt.ToString("g")</span>
+                                    </small>
+                                }
+                                else
+                                {
+                                    <small>
+                                        <em>No posts found</em>
+                                    </small>
+                                }
                             }
                         </div>
                         <div class="header-icon">
@@ -54,3 +61,33 @@
         }
     </div>
 </div>
+
+<div class="row">
+    <div class="col-lg-12 text-center">
+        <span class="badge">@Model.TotalThreads</span> Total threads | <span class="badge">@Model.TotalPosts</span> Total posts | <span class="badge">@Model.TotalMembers</span> Total members
+    </div>
+</div>
+
+@if (Model.ActiveUsers.Count() > 0)
+{ 
+    <br/>
+    <div class="panel panel-filled">
+        @if (Model.ActiveUsers.Count() == 1)
+        {
+            <div class="panel-heading">@Model.ActiveUsers.Count() user is online (in the past 15 minutes)</div>
+        }
+        else
+        {
+            <div class="panel-heading">@Model.ActiveUsers.Count() users are online (in the past 15 minutes)</div>
+        }
+        <div class="panel-body">
+            <small>
+                @string.Join(", ", Model.ActiveUsers);
+            </small>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    @{ await Html.RenderPartialAsync("_ForumScriptsPartial"); }
+}

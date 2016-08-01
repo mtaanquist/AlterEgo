@@ -63,7 +63,7 @@ namespace AlterEgo.Controllers
 
             var accessToken = User.Claims.SingleOrDefault(x => x.Type.Equals("BattleNetAccessToken")).Value;
             var characters = await BattleNetApi.GetUserCharacters(accessToken);
-            characters.ForEach(c => c.Player = user);
+            characters.ForEach(c => c.User = user);
 
             // Update the stored characters in the database
             await _battleNetDbHelper.UpdateStoredCharactersAsync(characters, user);

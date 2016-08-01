@@ -31,6 +31,9 @@ namespace AlterEgo.Controllers
 
         public async Task<IActionResult> Index()
         {
+            // Update user activity
+            await UpdateUserActivity(await _userManager.GetUserAsync(User));
+
             var categories =
                 await
                     _context.Categories
@@ -40,22 +43,31 @@ namespace AlterEgo.Controllers
                         .ToListAsync();
 
             var latestPosts = new Dictionary<int, Post>();
-            categories.ForEach(c => c.Forums.ForEach(f => 
+            categories.ForEach(c => c.Forums.ForEach(f =>
             {
                 var latestPost = _context.Posts
                     .Include(p => p.Thread).ThenInclude(t => t.Forum)
                     .Include(p => p.Author)
-                    .Where(p => p.Thread.Forum.ForumId == f.ForumId)
+                    .Where(p => p.Thread.Forum.ForumId == f.ForumId && !p.IsDeleted && !p.Thread.IsDeleted)
                     .OrderBy(p => p.PostId)
                     .LastOrDefault();
 
                 latestPosts.Add(f.ForumId, latestPost);
             }));
 
+            var activeUsers = await _context.Users.Where(u => u.LastActivity > DateTime.Now.Subtract(new TimeSpan(0, 15, 0))).ToListAsync();
+            var totalThreads = _context.Threads.Where(t => !t.IsDeleted).Count();
+            var totalPosts = _context.Posts.Where(p => !p.IsDeleted).Count() - totalThreads;
+            var totalMembers = _context.Users.Count();
+
             var model = new IndexViewModel
             {
                 Categories = categories,
-                LatestPosts = latestPosts
+                LatestPosts = latestPosts,
+                ActiveUsers = activeUsers,
+                TotalMembers = totalMembers,
+                TotalPosts = totalPosts,
+                TotalThreads = totalThreads
             };
 
             return View(model);
@@ -93,7 +105,7 @@ namespace AlterEgo.Controllers
                 model.FoundThreads = foundThreads;
                 model.PagedFoundThreads = foundThreads.ToPagedList(100, page ?? 1);
             }
-            
+
             ViewBag.SearchTerm = term;
 
             return View(model);
@@ -103,6 +115,13 @@ namespace AlterEgo.Controllers
         // GET: /forum/threads/4
         public async Task<IActionResult> Threads(int id, int? page)
         {
+            // Update user activity
+            var user = await _userManager.GetUserAsync(User);
+            await UpdateUserActivity(user);
+
+            var threadActivities = _context.ThreadActivities.Where(t => t.ApplicationUserId == user.Id).ToList();
+            ViewBag.ThreadActivities = threadActivities;
+
             var threads =
                 await
                     _context.Threads.Include(t => t.Author)
@@ -129,6 +148,11 @@ namespace AlterEgo.Controllers
         // GET: /forum/thread/4
         public async Task<IActionResult> Thread(int id, int? page)
         {
+            // Update user activity
+            var user = await _userManager.GetUserAsync(User);
+            await UpdateUserActivity(user);
+            await UpdateUserThreadActivity(user, id);
+
             var thread =
                 await
                     _context.Threads.Include(t => t.Author)
@@ -146,7 +170,8 @@ namespace AlterEgo.Controllers
 
             thread.Posts.ForEach(post => post.FormattedContent = MarkdownHelper.Transform(post.Content));
 
-            var model = new ThreadViewModel {
+            var model = new ThreadViewModel
+            {
                 Thread = thread,
                 Posts = posts,
                 PagedPosts = posts.ToPagedList(_postsPageSize, page ?? 1)
@@ -273,6 +298,8 @@ namespace AlterEgo.Controllers
                 PostId = post.PostId
             };
 
+
+
             return View(model);
         }
 
@@ -344,6 +371,47 @@ namespace AlterEgo.Controllers
             await _context.SaveChangesAsync();
 
             return RedirectToAction(nameof(LatestPost), new { id = thread.ThreadId });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> UpdateUserLatestReadPost(int threadId, int postId)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            var threadActivity = _context.ThreadActivities.SingleOrDefault(t => t.ThreadId == threadId && t.ApplicationUserId == user.Id);
+
+            if (threadActivity == null)
+            {
+                threadActivity = new ThreadActivity
+                {
+                    ApplicationUser = user,
+                    ApplicationUserId = user.Id,
+                    LastRead = DateTime.Now,
+                    LastReadPostId = postId,
+                    ThreadId = threadId
+                };
+
+                _context.Add(threadActivity);
+            }
+            else
+            {
+                if (threadActivity.LastReadPostId == 0)
+                {
+                    threadActivity.LastReadPostId = postId;
+                }
+                else
+                {
+                    if (threadActivity.LastReadPostId < postId)
+                    {
+                        threadActivity.LastReadPostId = postId;
+                    }
+                }
+
+                _context.Update(threadActivity);
+            }
+          
+            await _context.SaveChangesAsync();
+
+            return Ok();
         }
 
         #region Administration
@@ -424,19 +492,6 @@ namespace AlterEgo.Controllers
             var thread = await _context.Threads.SingleOrDefaultAsync(t => t.ThreadId == id);
             thread.IsDeleted = true;
 
-            //// Have to updated the latest post/thread navigation properties
-            //var forum = await _context.Forums.Include(f => f.LatestPost)
-            //    .SingleOrDefaultAsync(f => f.ForumId == thread.ForumId);
-            //if (forum.LatestPost.ThreadId == id)
-            //{
-            //    var latestPost = await _context.Posts.Include(p => p.Thread).ThenInclude(t => t.Forum)
-            //        .Where(p => p.Thread.ForumId == forum.ForumId)
-            //        .OrderBy(p => p.PostId).LastOrDefaultAsync();
-
-            //    forum.LatestPost = latestPost;
-            //    _context.Forums.Update(forum);
-            //}
-
             _context.Threads.Update(thread);
             await _context.SaveChangesAsync();
 
@@ -480,18 +535,6 @@ namespace AlterEgo.Controllers
                 .SingleOrDefaultAsync(p => p.PostId == id);
             post.IsDeleted = true;
 
-            //// Have to updated the latest post/thread navigation properties
-            //if (post.Thread.Forum.LatestPost.PostId == post.PostId)
-            //{
-            //    var forum = post.Thread.Forum;
-            //    var latestPost = await _context.Posts.Include(p => p.Thread).ThenInclude(t => t.Forum)
-            //        .Where(p => p.Thread.ForumId == forum.ForumId)
-            //        .OrderBy(p => p.PostId).LastOrDefaultAsync();
-
-            //    forum.LatestPost = latestPost;
-            //    _context.Forums.Update(forum);
-            //}
-
             _context.Posts.Update(post);
             await _context.SaveChangesAsync();
 
@@ -504,13 +547,21 @@ namespace AlterEgo.Controllers
 
         private async Task<int> GetLatestPostIdAsync(int threadId)
         {
-            var latestPost = await _context.Posts
-                .Include(post => post.Thread)
-                .Where(post => post.ThreadId == threadId && !post.Thread.IsDeleted && !post.IsDeleted)
-                .OrderBy(post => post.PostedAt)
-                .LastAsync();
+            var user = await _userManager.GetUserAsync(User);
+            var threadActivity = _context.ThreadActivities.SingleOrDefault(t => t.ThreadId == threadId && t.ApplicationUserId == user.Id);
 
-            return latestPost.PostId;
+            if (threadActivity == null || threadActivity.LastReadPostId == 0)
+            {
+                var latestPost = await _context.Posts
+                    .Include(post => post.Thread)
+                    .Where(post => post.ThreadId == threadId && !post.Thread.IsDeleted && !post.IsDeleted)
+                    .OrderBy(post => post.PostedAt)
+                    .LastAsync();
+
+                return latestPost.PostId;
+            }
+
+            return threadActivity.LastReadPostId;
         }
 
         private async Task<int> GetPostPageNoAsync(int postId)
@@ -521,6 +572,39 @@ namespace AlterEgo.Controllers
             var postIndex = posts.IndexOf(post);
 
             return ((postIndex / _postsPageSize) + 1);
+        }
+
+        private async Task UpdateUserActivity(ApplicationUser user)
+        {
+            user.LastActivity = DateTime.Now;
+            _context.Update(user);
+            await _context.SaveChangesAsync();
+        }
+
+        private async Task UpdateUserThreadActivity(ApplicationUser user, int threadId)
+        {
+            var threadActivity = _context.ThreadActivities.SingleOrDefault(t => t.ApplicationUserId == user.Id && t.ThreadId == threadId);
+
+            if (threadActivity == null)
+            {
+                threadActivity = new ThreadActivity
+                {
+                    ApplicationUserId = user.Id,
+                    ApplicationUser = user,
+                    LastRead = DateTime.Now,
+                    LastReadPostId = _context.Posts.Single(p => p.IsFirstPost && p.ThreadId == threadId).PostId,
+                    ThreadId = threadId
+                };
+
+                _context.Add(threadActivity);
+            }
+            else
+            {
+                threadActivity.LastRead = DateTime.Now;
+                _context.Update(threadActivity);
+            }
+
+            await _context.SaveChangesAsync();
         }
 
         #endregion

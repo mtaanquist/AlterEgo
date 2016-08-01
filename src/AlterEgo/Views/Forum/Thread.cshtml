@@ -52,21 +52,27 @@
 </div>
 
 <div class="row">
-    <div class="col-lg-6 pull-left">
-        @{
-            var stickyAction = (Model.Thread.IsStickied) ? "UnstickyThread" : "StickyThread";
-            var stickyLinkText = (Model.Thread.IsStickied) ? "Unsticky" : "Sticky";
+    <form asp-controller="Forum" asp-action="DeleteThread" asp-route-id="@Model.Thread.ThreadId" role="form" id="delete-thread-form">
+        <div class="col-lg-6 pull-left">
+            @{
+                var stickyAction = (Model.Thread.IsStickied) ? "UnstickyThread" : "StickyThread";
+                var stickyLinkText = (Model.Thread.IsStickied) ? "Unsticky" : "Sticky";
 
-            var lockAction = (Model.Thread.IsLocked) ? "UnlockThread" : "LockThread";
-            var lockLinkText = (Model.Thread.IsLocked) ? "Unlock" : "Lock";
-        }
-        @if (currentUser.IsModerator) { 
-            <a asp-controller="Forum" asp-action="@stickyAction" asp-route-id="@Model.Thread.ThreadId" class="btn btn-warning">@stickyLinkText</a>
-            <a asp-controller="Forum" asp-action="@lockAction" asp-route-id="@Model.Thread.ThreadId" class="btn btn-warning">@lockLinkText</a>
-            <a asp-controller="Forum" asp-action="DeleteThread" asp-route-id="@Model.Thread.ThreadId" class="btn btn-danger">Delete Thread</a>
-        }
-    </div>
-    <div class="col-lg-6 pull-right">
+                var lockAction = (Model.Thread.IsLocked) ? "UnlockThread" : "LockThread";
+                var lockLinkText = (Model.Thread.IsLocked) ? "Unlock" : "Lock";
+            }
+            @if (currentUser.IsModerator)
+            {
+                <a asp-controller="Forum" asp-action="@stickyAction" asp-route-id="@Model.Thread.ThreadId" class="btn btn-warning">@stickyLinkText</a>
+                <a asp-controller="Forum" asp-action="@lockAction" asp-route-id="@Model.Thread.ThreadId" class="btn btn-warning">@lockLinkText</a>
+
+                <button id="delete-thread-button" type="button" class="btn btn-danger">Delete Thread</button>
+
+                @*<a asp-controller="Forum" asp-action="DeleteThread" asp-route-id="@Model.Thread.ThreadId" class="btn btn-danger">Delete Thread</a>*@
+            }
+        </div>
+    </form>
+    <div class="col-lg-6 pull-right text-right">
         @if (Model.Thread.IsLocked)
         {
             <button type="button" class="btn btn-default" disabled="disabled">Thread Locked</button>
@@ -101,4 +107,8 @@
             </form>
         </div>
     </div>
+}
+
+@section Scripts {
+    @{ await Html.RenderPartialAsync("_ForumScriptsPartial"); }
 }

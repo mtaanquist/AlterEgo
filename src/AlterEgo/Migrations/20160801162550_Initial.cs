@@ -31,6 +31,8 @@ namespace AlterEgo.Migrations
                 {
                     Id = table.Column<string>(nullable: false),
                     AccessFailedCount = table.Column<int>(nullable: false),
+                    AccessToken = table.Column<string>(nullable: true),
+                    AccessTokenExpiry = table.Column<string>(nullable: true),
                     ConcurrencyStamp = table.Column<string>(nullable: true),
                     Email = table.Column<string>(maxLength: 256, nullable: true),
                     EmailConfirmed = table.Column<bool>(nullable: false),
@@ -57,6 +59,7 @@ namespace AlterEgo.Migrations
                 {
                     CategoryId = table.Column<int>(nullable: false)
                         .Annotation("Npgsql:ValueGeneratedOnAdd", true),
+                    IsDeleted = table.Column<bool>(nullable: false),
                     Name = table.Column<string>(nullable: true),
                     ReadableBy = table.Column<int>(nullable: false),
                     SortOrder = table.Column<int>(nullable: false)
@@ -202,24 +205,53 @@ namespace AlterEgo.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Member",
+                name: "Forums",
                 columns: table => new
                 {
-                    GuildName = table.Column<string>(nullable: false),
-                    GuildRealm = table.Column<string>(nullable: false),
+                    ForumId = table.Column<int>(nullable: false)
+                        .Annotation("Npgsql:ValueGeneratedOnAdd", true),
+                    CanDeleteThreads = table.Column<int>(nullable: false),
+                    CanEditThreads = table.Column<int>(nullable: false),
+                    CanLockThreads = table.Column<int>(nullable: false),
+                    CanStickyThreads = table.Column<int>(nullable: false),
+                    CategoryId = table.Column<int>(nullable: false),
+                    Description = table.Column<string>(nullable: true),
+                    IsDeleted = table.Column<bool>(nullable: false),
+                    Name = table.Column<string>(nullable: true),
+                    ReadableBy = table.Column<int>(nullable: false),
+                    SortOrder = table.Column<int>(nullable: false),
+                    WritableBy = table.Column<int>(nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Forums", x => x.ForumId);
+                    table.ForeignKey(
+                        name: "FK_Forums_Categories_CategoryId",
+                        column: x => x.CategoryId,
+                        principalTable: "Categories",
+                        principalColumn: "CategoryId",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Members",
+                columns: table => new
+                {
                     CharacterName = table.Column<string>(nullable: false),
                     CharacterRealm = table.Column<string>(nullable: false),
+                    GuildName = table.Column<string>(nullable: true),
+                    GuildRealm = table.Column<string>(nullable: true),
                     Rank = table.Column<int>(nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Member", x => new { x.GuildName, x.GuildRealm, x.CharacterName, x.CharacterRealm });
+                    table.PrimaryKey("PK_Members", x => new { x.CharacterName, x.CharacterRealm });
                     table.ForeignKey(
-                        name: "FK_Member_Guilds_GuildName_GuildRealm",
+                        name: "FK_Members_Guilds_GuildName_GuildRealm",
                         columns: x => new { x.GuildName, x.GuildRealm },
                         principalTable: "Guilds",
                         principalColumns: new[] { "Name", "Realm" },
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -268,175 +300,6 @@ namespace AlterEgo.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Characters",
-                columns: table => new
-                {
-                    Name = table.Column<string>(nullable: false),
-                    Realm = table.Column<string>(nullable: false),
-                    AchievementPoints = table.Column<int>(nullable: false),
-                    ApplicationUserId = table.Column<string>(nullable: true),
-                    Battlegroup = table.Column<string>(nullable: true),
-                    CharacterClassId = table.Column<int>(nullable: true),
-                    CharacterRaceId = table.Column<int>(nullable: true),
-                    Class = table.Column<int>(nullable: false),
-                    Gender = table.Column<int>(nullable: false),
-                    Guild = table.Column<string>(nullable: true),
-                    GuildRank = table.Column<int>(nullable: false),
-                    GuildRealm = table.Column<string>(nullable: true),
-                    LastModified = table.Column<long>(nullable: false),
-                    Level = table.Column<int>(nullable: false),
-                    MemberCharacterName = table.Column<string>(nullable: true),
-                    MemberCharacterRealm = table.Column<string>(nullable: true),
-                    MemberGuildName = table.Column<string>(nullable: true),
-                    MemberGuildRealm = table.Column<string>(nullable: true),
-                    PlayerId = table.Column<int>(nullable: false),
-                    PlayerId1 = table.Column<string>(nullable: true),
-                    Race = table.Column<int>(nullable: false),
-                    Thumbnail = table.Column<string>(nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Characters", x => new { x.Name, x.Realm });
-                    table.ForeignKey(
-                        name: "FK_Characters_AspNetUsers_ApplicationUserId",
-                        column: x => x.ApplicationUserId,
-                        principalTable: "AspNetUsers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_Characters_Classes_CharacterClassId",
-                        column: x => x.CharacterClassId,
-                        principalTable: "Classes",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_Characters_Races_CharacterRaceId",
-                        column: x => x.CharacterRaceId,
-                        principalTable: "Races",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_Characters_AspNetUsers_PlayerId1",
-                        column: x => x.PlayerId1,
-                        principalTable: "AspNetUsers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_Characters_Member_MemberGuildName_MemberGuildRealm_MemberCharacterName_MemberCharacterRealm",
-                        columns: x => new { x.MemberGuildName, x.MemberGuildRealm, x.MemberCharacterName, x.MemberCharacterRealm },
-                        principalTable: "Member",
-                        principalColumns: new[] { "GuildName", "GuildRealm", "CharacterName", "CharacterRealm" },
-                        onDelete: ReferentialAction.Restrict);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "News",
-                columns: table => new
-                {
-                    NewsId = table.Column<int>(nullable: false)
-                        .Annotation("Npgsql:ValueGeneratedOnAdd", true),
-                    AchievementId = table.Column<int>(nullable: true),
-                    Character = table.Column<string>(nullable: true),
-                    Context = table.Column<string>(nullable: true),
-                    GuildCharacterName = table.Column<string>(nullable: true),
-                    GuildCharacterRealm = table.Column<string>(nullable: true),
-                    GuildName = table.Column<string>(nullable: true),
-                    GuildRealm = table.Column<string>(nullable: true),
-                    ItemId = table.Column<int>(nullable: false),
-                    Timestamp = table.Column<long>(nullable: false),
-                    Type = table.Column<string>(nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_News", x => x.NewsId);
-                    table.ForeignKey(
-                        name: "FK_News_Achievements_AchievementId",
-                        column: x => x.AchievementId,
-                        principalTable: "Achievements",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_News_Characters_GuildCharacterName_GuildCharacterRealm",
-                        columns: x => new { x.GuildCharacterName, x.GuildCharacterRealm },
-                        principalTable: "Characters",
-                        principalColumns: new[] { "Name", "Realm" },
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_News_Guilds_GuildName_GuildRealm",
-                        columns: x => new { x.GuildName, x.GuildRealm },
-                        principalTable: "Guilds",
-                        principalColumns: new[] { "Name", "Realm" },
-                        onDelete: ReferentialAction.Restrict);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Posts",
-                columns: table => new
-                {
-                    PostId = table.Column<int>(nullable: false)
-                        .Annotation("Npgsql:ValueGeneratedOnAdd", true),
-                    AuthorId = table.Column<string>(nullable: true),
-                    AuthorUserId = table.Column<string>(nullable: true),
-                    Content = table.Column<string>(nullable: true),
-                    EditedAt = table.Column<DateTime>(nullable: false),
-                    EditorId = table.Column<string>(nullable: true),
-                    EditorUserId = table.Column<int>(nullable: false),
-                    PostedAt = table.Column<DateTime>(nullable: false),
-                    ThreadId = table.Column<int>(nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Posts", x => x.PostId);
-                    table.ForeignKey(
-                        name: "FK_Posts_AspNetUsers_AuthorId",
-                        column: x => x.AuthorId,
-                        principalTable: "AspNetUsers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_Posts_AspNetUsers_EditorId",
-                        column: x => x.EditorId,
-                        principalTable: "AspNetUsers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Forums",
-                columns: table => new
-                {
-                    ForumId = table.Column<int>(nullable: false)
-                        .Annotation("Npgsql:ValueGeneratedOnAdd", true),
-                    CanDeleteThreads = table.Column<int>(nullable: false),
-                    CanEditThreads = table.Column<int>(nullable: false),
-                    CanLockThreads = table.Column<int>(nullable: false),
-                    CanStickyThreads = table.Column<int>(nullable: false),
-                    CategoryId = table.Column<int>(nullable: false),
-                    Description = table.Column<string>(nullable: true),
-                    LatestPostPostId = table.Column<int>(nullable: true),
-                    Name = table.Column<string>(nullable: true),
-                    ReadableBy = table.Column<int>(nullable: false),
-                    SortOrder = table.Column<int>(nullable: false),
-                    WritableBy = table.Column<int>(nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Forums", x => x.ForumId);
-                    table.ForeignKey(
-                        name: "FK_Forums_Categories_CategoryId",
-                        column: x => x.CategoryId,
-                        principalTable: "Categories",
-                        principalColumn: "CategoryId",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_Forums_Posts_LatestPostPostId",
-                        column: x => x.LatestPostPostId,
-                        principalTable: "Posts",
-                        principalColumn: "PostId",
-                        onDelete: ReferentialAction.Restrict);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "Threads",
                 columns: table => new
                 {
@@ -451,7 +314,6 @@ namespace AlterEgo.Migrations
                     IsDeleted = table.Column<bool>(nullable: false),
                     IsLocked = table.Column<bool>(nullable: false),
                     IsStickied = table.Column<bool>(nullable: false),
-                    LatestPostTime = table.Column<DateTime>(nullable: false),
                     ModifiedAt = table.Column<DateTime>(nullable: false),
                     Name = table.Column<string>(nullable: true),
                     Views = table.Column<int>(nullable: false)
@@ -479,6 +341,143 @@ namespace AlterEgo.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
+            migrationBuilder.CreateTable(
+                name: "Characters",
+                columns: table => new
+                {
+                    Name = table.Column<string>(nullable: false),
+                    Realm = table.Column<string>(nullable: false),
+                    AchievementPoints = table.Column<int>(nullable: false),
+                    Battlegroup = table.Column<string>(nullable: true),
+                    CharacterClassId = table.Column<int>(nullable: true),
+                    CharacterRaceId = table.Column<int>(nullable: true),
+                    Class = table.Column<int>(nullable: false),
+                    Gender = table.Column<int>(nullable: false),
+                    Guild = table.Column<string>(nullable: true),
+                    GuildRank = table.Column<int>(nullable: false),
+                    GuildRealm = table.Column<string>(nullable: true),
+                    LastModified = table.Column<long>(nullable: false),
+                    Level = table.Column<int>(nullable: false),
+                    MemberCharacterName = table.Column<string>(nullable: true),
+                    MemberCharacterRealm = table.Column<string>(nullable: true),
+                    Race = table.Column<int>(nullable: false),
+                    Thumbnail = table.Column<string>(nullable: true),
+                    UserId = table.Column<string>(nullable: true),
+                    UserId1 = table.Column<string>(nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Characters", x => new { x.Name, x.Realm });
+                    table.ForeignKey(
+                        name: "FK_Characters_Classes_CharacterClassId",
+                        column: x => x.CharacterClassId,
+                        principalTable: "Classes",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_Characters_Races_CharacterRaceId",
+                        column: x => x.CharacterRaceId,
+                        principalTable: "Races",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_Characters_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_Characters_AspNetUsers_UserId1",
+                        column: x => x.UserId1,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_Characters_Members_MemberCharacterName_MemberCharacterRealm",
+                        columns: x => new { x.MemberCharacterName, x.MemberCharacterRealm },
+                        principalTable: "Members",
+                        principalColumns: new[] { "CharacterName", "CharacterRealm" },
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Posts",
+                columns: table => new
+                {
+                    PostId = table.Column<int>(nullable: false)
+                        .Annotation("Npgsql:ValueGeneratedOnAdd", true),
+                    AuthorId = table.Column<string>(nullable: true),
+                    AuthorUserId = table.Column<string>(nullable: true),
+                    Content = table.Column<string>(nullable: true),
+                    EditedAt = table.Column<DateTime>(nullable: false),
+                    EditorId = table.Column<string>(nullable: true),
+                    EditorUserId = table.Column<int>(nullable: false),
+                    IsDeleted = table.Column<bool>(nullable: false),
+                    IsFirstPost = table.Column<bool>(nullable: false),
+                    PostedAt = table.Column<DateTime>(nullable: false),
+                    ThreadId = table.Column<int>(nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Posts", x => x.PostId);
+                    table.ForeignKey(
+                        name: "FK_Posts_AspNetUsers_AuthorId",
+                        column: x => x.AuthorId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_Posts_AspNetUsers_EditorId",
+                        column: x => x.EditorId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_Posts_Threads_ThreadId",
+                        column: x => x.ThreadId,
+                        principalTable: "Threads",
+                        principalColumn: "ThreadId",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "News",
+                columns: table => new
+                {
+                    Timestamp = table.Column<long>(nullable: false),
+                    Character = table.Column<string>(nullable: false),
+                    AchievementId = table.Column<int>(nullable: true),
+                    Context = table.Column<string>(nullable: true),
+                    GuildCharacterName = table.Column<string>(nullable: true),
+                    GuildCharacterRealm = table.Column<string>(nullable: true),
+                    GuildName = table.Column<string>(nullable: true),
+                    GuildRealm = table.Column<string>(nullable: true),
+                    ItemId = table.Column<int>(nullable: false),
+                    Type = table.Column<string>(nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_News", x => new { x.Timestamp, x.Character });
+                    table.ForeignKey(
+                        name: "FK_News_Achievements_AchievementId",
+                        column: x => x.AchievementId,
+                        principalTable: "Achievements",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_News_Characters_GuildCharacterName_GuildCharacterRealm",
+                        columns: x => new { x.GuildCharacterName, x.GuildCharacterRealm },
+                        principalTable: "Characters",
+                        principalColumns: new[] { "Name", "Realm" },
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_News_Guilds_GuildName_GuildRealm",
+                        columns: x => new { x.GuildName, x.GuildRealm },
+                        principalTable: "Guilds",
+                        principalColumns: new[] { "Name", "Realm" },
+                        onDelete: ReferentialAction.Restrict);
+                });
+
             migrationBuilder.CreateIndex(
                 name: "EmailIndex",
                 table: "AspNetUsers",
@@ -491,11 +490,6 @@ namespace AlterEgo.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_Characters_ApplicationUserId",
-                table: "Characters",
-                column: "ApplicationUserId");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_Characters_CharacterClassId",
                 table: "Characters",
                 column: "CharacterClassId");
@@ -506,14 +500,19 @@ namespace AlterEgo.Migrations
                 column: "CharacterRaceId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Characters_PlayerId1",
+                name: "IX_Characters_UserId",
                 table: "Characters",
-                column: "PlayerId1");
+                column: "UserId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Characters_MemberGuildName_MemberGuildRealm_MemberCharacterName_MemberCharacterRealm",
+                name: "IX_Characters_UserId1",
                 table: "Characters",
-                columns: new[] { "MemberGuildName", "MemberGuildRealm", "MemberCharacterName", "MemberCharacterRealm" },
+                column: "UserId1");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Characters_MemberCharacterName_MemberCharacterRealm",
+                table: "Characters",
+                columns: new[] { "MemberCharacterName", "MemberCharacterRealm" },
                 unique: true);
 
             migrationBuilder.CreateIndex(
@@ -527,13 +526,8 @@ namespace AlterEgo.Migrations
                 column: "CategoryId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Forums_LatestPostPostId",
-                table: "Forums",
-                column: "LatestPostPostId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Member_GuildName_GuildRealm",
-                table: "Member",
+                name: "IX_Members_GuildName_GuildRealm",
+                table: "Members",
                 columns: new[] { "GuildName", "GuildRealm" });
 
             migrationBuilder.CreateIndex(
@@ -610,47 +604,18 @@ namespace AlterEgo.Migrations
                 name: "IX_AspNetUserRoles_UserId",
                 table: "AspNetUserRoles",
                 column: "UserId");
-
-            migrationBuilder.AddForeignKey(
-                name: "FK_Posts_Threads_ThreadId",
-                table: "Posts",
-                column: "ThreadId",
-                principalTable: "Threads",
-                principalColumn: "ThreadId",
-                onDelete: ReferentialAction.Cascade);
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropForeignKey(
-                name: "FK_Posts_AspNetUsers_AuthorId",
-                table: "Posts");
-
-            migrationBuilder.DropForeignKey(
-                name: "FK_Posts_AspNetUsers_EditorId",
-                table: "Posts");
-
-            migrationBuilder.DropForeignKey(
-                name: "FK_Threads_AspNetUsers_AuthorId",
-                table: "Threads");
-
-            migrationBuilder.DropForeignKey(
-                name: "FK_Threads_AspNetUsers_EditorId",
-                table: "Threads");
-
-            migrationBuilder.DropForeignKey(
-                name: "FK_Forums_Categories_CategoryId",
-                table: "Forums");
-
-            migrationBuilder.DropForeignKey(
-                name: "FK_Forums_Posts_LatestPostPostId",
-                table: "Forums");
-
             migrationBuilder.DropTable(
                 name: "Criteria");
 
             migrationBuilder.DropTable(
                 name: "News");
+
+            migrationBuilder.DropTable(
+                name: "Posts");
 
             migrationBuilder.DropTable(
                 name: "AspNetRoleClaims");
@@ -674,6 +639,9 @@ namespace AlterEgo.Migrations
                 name: "Characters");
 
             migrationBuilder.DropTable(
+                name: "Threads");
+
+            migrationBuilder.DropTable(
                 name: "AspNetRoles");
 
             migrationBuilder.DropTable(
@@ -683,25 +651,19 @@ namespace AlterEgo.Migrations
                 name: "Races");
 
             migrationBuilder.DropTable(
-                name: "Member");
-
-            migrationBuilder.DropTable(
-                name: "Guilds");
+                name: "Members");
 
             migrationBuilder.DropTable(
                 name: "AspNetUsers");
 
             migrationBuilder.DropTable(
-                name: "Categories");
-
-            migrationBuilder.DropTable(
-                name: "Posts");
-
-            migrationBuilder.DropTable(
-                name: "Threads");
-
-            migrationBuilder.DropTable(
                 name: "Forums");
+
+            migrationBuilder.DropTable(
+                name: "Guilds");
+
+            migrationBuilder.DropTable(
+                name: "Categories");
         }
     }
 }

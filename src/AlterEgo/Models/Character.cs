@@ -1,3 +1,4 @@
+using System;
 using System.ComponentModel.DataAnnotations;
 
 namespace AlterEgo.Models
@@ -23,10 +24,18 @@ namespace AlterEgo.Models
 
         public string Thumbnail { get; set; }
 
-        public int PlayerId { get; set; }
-        public ApplicationUser Player { get; set; }
+        public string UserId { get; set; }
+        public ApplicationUser User { get; set; }
         public Member Member { get; set; }
         public long LastModified { get; set; }
+
+        public override bool Equals(object obj)
+        {
+            if (obj == null || obj.GetType() != typeof(Character)) return false;
+
+            var other = (Character)obj;
+            return (this.Name == other.Name && this.Name == other.Realm);
+        }
     }
 
     public class Spec

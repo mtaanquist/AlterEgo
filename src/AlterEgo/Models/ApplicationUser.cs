@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 
@@ -11,12 +12,18 @@ namespace AlterEgo.Models
         public string AccessToken { get; set; }
         public string AccessTokenExpiry { get; set;}
 
-        public int GuildRank { get; set; }
+        public int Rank { get; set; }
+
+        // Last Activity
+        public DateTime RegisteredAt { get; set; }
+        public DateTime LastActivity { get; set; }
+        public List<ThreadActivity> ThreadActivities { get; set; }
 
         // Permission helpers, not mapped
         [NotMapped]
-        public bool IsModerator => (GuildRank < 4);
+        public bool IsModerator => (Rank <= (int)GuildRank.ForumAdmin);
 
+        [InverseProperty("User")]
         public List<Character> Characters { get; set; }
         
         [InverseProperty("Author")]
@@ -30,5 +37,17 @@ namespace AlterEgo.Models
 
         [InverseProperty("Editor")]
         public List<Post> EditedPosts { get; set; }
+    }
+
+    public sealed class ThreadActivity
+    {
+        public int ThreadActivityId { get; set; }
+
+        public string ApplicationUserId { get; set; }
+        public ApplicationUser ApplicationUser { get; set; }
+
+        public int ThreadId { get; set; }
+        public DateTime LastRead { get; set; }
+        public int LastReadPostId { get; set; }
     }
 }

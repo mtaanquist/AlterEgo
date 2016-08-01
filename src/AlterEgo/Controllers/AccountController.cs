@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
@@ -216,7 +217,9 @@ namespace AlterEgo.Controllers
                     UserName = battleTag,
                     Email = model.Email,
                     AccessToken = accessToken,
-                    AccessTokenExpiry = accessTokenExpiry
+                    AccessTokenExpiry = accessTokenExpiry,
+                    Rank = 99,
+                    RegisteredAt = DateTime.Now
                 };
 
                 var claims = new List<Claim>
@@ -244,12 +247,12 @@ namespace AlterEgo.Controllers
 
                 // Get user's characters
                 // Get characters
-                var characters = await _context.Characters.Include(x => x.CharacterClass).Include(x => x.CharacterRace).Where(c => c.Player == user).ToListAsync();
+                var characters = await _context.Characters.Include(x => x.CharacterClass).Include(x => x.CharacterRace).Where(c => c.User == user).ToListAsync();
                 if (characters == null || !characters.Any())
                 {
                     characters = await BattleNetApi.GetUserCharacters(accessToken);
 
-                    characters.ForEach(c => c.Player = user);
+                    characters.ForEach(c => c.User = user);
                     characters.ForEach(c => c.CharacterRace = _context.Races.SingleOrDefault(r => r.Id == c.Race));
                     characters.ForEach(c => c.CharacterClass = _context.Classes.SingleOrDefault(cl => cl.Id == c.Class));
                     _context.Characters.AddRange(characters);

@@ -42,3 +42,7 @@
 
 <br />
 @await Html.PartialAsync("_ThreadsPartial", Model.PagedThreads)
+
+@section Scripts {
+    @{ await Html.RenderPartialAsync("_ForumScriptsPartial"); }
+}

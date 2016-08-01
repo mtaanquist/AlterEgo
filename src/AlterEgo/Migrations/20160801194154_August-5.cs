@@ -4,22 +4,22 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace AlterEgo.Migrations
 {
-    public partial class MinorChanges1 : Migration
+    public partial class August5 : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AddColumn<bool>(
-                name: "IsFirstPost",
-                table: "Posts",
+            migrationBuilder.AddColumn<int>(
+                name: "LastReadPostId",
+                table: "ThreadActivities",
                 nullable: false,
-                defaultValue: false);
+                defaultValue: 0);
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropColumn(
-                name: "IsFirstPost",
-                table: "Posts");
+                name: "LastReadPostId",
+                table: "ThreadActivities");
         }
     }
 }

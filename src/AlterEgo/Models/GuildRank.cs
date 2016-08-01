@@ -1,12 +1,19 @@
+using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
+
 namespace AlterEgo.Models
 {
     public enum GuildRank
     {
-        GuildLeader,
+        [Display(Name = "Guild Master")]
+        GuildMaster,
         Officer,
-        Advisor,
+        [Display(Name = "Forum Admin")]
+        ForumAdmin,
         Raider,
-        RaiderAlt,
-        Social
+        Triallist,
+        Social,
+        [Display(Name = "Everyone (incl. non-guild members)")]
+        Everyone = 99
     }
 }

@@ -4,29 +4,31 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace AlterEgo.Migrations
 {
-    public partial class Woofwoof1 : Migration
+    public partial class August3 : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AddColumn<string>(
-                name: "AccessToken",
+            migrationBuilder.AddColumn<DateTime>(
+                name: "LastActivity",
                 table: "AspNetUsers",
-                nullable: true);
+                nullable: false,
+                defaultValue: new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified));
 
-            migrationBuilder.AddColumn<string>(
-                name: "AccessTokenExpiry",
+            migrationBuilder.AddColumn<DateTime>(
+                name: "RegisteredAt",
                 table: "AspNetUsers",
-                nullable: true);
+                nullable: false,
+                defaultValue: new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified));
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropColumn(
-                name: "AccessToken",
+                name: "LastActivity",
                 table: "AspNetUsers");
 
             migrationBuilder.DropColumn(
-                name: "AccessTokenExpiry",
+                name: "RegisteredAt",
                 table: "AspNetUsers");
         }
     }
