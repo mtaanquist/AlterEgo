@@ -56,6 +56,12 @@ namespace AlterEgo.Controllers
                 : "";
 
             var user = await GetCurrentUserAsync();
+            if (string.IsNullOrEmpty(user.AccessToken))
+            {
+                await _signInManager.SignOutAsync();
+                return RedirectToAction("Login", "Account");
+            }
+
             if (user == null)
             {
                 return View("Error");

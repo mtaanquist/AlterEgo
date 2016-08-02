@@ -19,20 +19,29 @@ namespace AlterEgo.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly SignInManager<ApplicationUser> _signInManager;
 
         private readonly int _postsPageSize = 25;
         private readonly int _threadsPageSize = 100;
 
-        public ForumController(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
+        public ForumController(ApplicationDbContext context, UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager)
         {
             _context = context;
             _userManager = userManager;
+            _signInManager = signInManager;
         }
 
         public async Task<IActionResult> Index()
         {
             // Update user activity
-            await UpdateUserActivity(await _userManager.GetUserAsync(User));
+            var user = await _userManager.GetUserAsync(User);
+            if (string.IsNullOrEmpty(user.AccessToken))
+            {
+                await _signInManager.SignOutAsync();
+                return RedirectToAction("Login", "Account");
+            }
+
+            await UpdateUserActivity(user);
 
             var categories =
                 await

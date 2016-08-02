@@ -45,15 +45,34 @@ namespace AlterEgo.Controllers
         [HttpGet]
         public async Task<IActionResult> UpdateUserCharacters()
         {
-            var users = _context.Users.ToList();
+            var users = _context.Users.AsNoTracking().ToList();
             var storedCharacters = _context.Characters.Include(c => c.User).AsNoTracking().ToList();
 
             var characters = new List<Character>();
             await users.ForEachAsync(async user =>
             {
-                var userCharacters = await BattleNetApi.GetUserCharacters(user.AccessToken);
-                userCharacters.ForEach(c => c.User = user);
-                characters.AddRange(userCharacters);
+                if (!string.IsNullOrEmpty(user.AccessToken))
+                {
+                    var userCharacters = await BattleNetApi.GetUserCharacters(user.AccessToken);
+
+                    if (userCharacters != null)
+                    {
+                        userCharacters.ForEach(c =>
+                        {
+                            c.User = user;
+                            c.CharacterRace = _context.Races.SingleOrDefault(r => r.Id == c.Race);
+                            c.CharacterClass = _context.Classes.SingleOrDefault(cl => cl.Id == c.Class);
+                        });
+                        characters.AddRange(userCharacters);
+                    }
+                    else
+                    {
+                        user.AccessToken = string.Empty;
+                        user.AccessTokenExpiry = string.Empty;
+                        _context.Update(user);
+                        await _context.SaveChangesAsync();
+                    }
+                }
             });
 
             // Add, update or delete characters in the stored list
@@ -88,6 +107,12 @@ namespace AlterEgo.Controllers
             var characters = new List<Character>();
             roster.ForEach(member => characters.Add(member.Character));
 
+            characters.ForEach(c =>
+            {
+                c.CharacterRace = _context.Races.SingleOrDefault(r => r.Id == c.Race);
+                c.CharacterClass = _context.Classes.SingleOrDefault(cl => cl.Id == c.Class);
+            });
+
             var storedCharacters = _context.Characters.Include(c => c.User).AsNoTracking().ToList();
 
             // Add, update or delete characters in the stored list
@@ -112,7 +137,7 @@ namespace AlterEgo.Controllers
 
             // Update the Member table
             var members = new List<Member>();
-            await roster.ForEachAsync(async r => 
+            await roster.ForEachAsync(async r =>
             {
                 var member = new Member
                 {
@@ -143,7 +168,7 @@ namespace AlterEgo.Controllers
                     .ToList();
             _context.UpdateRange(changedMembers);
             await _context.SaveChangesAsync();
-            
+
             return Ok();
         }
 
@@ -154,9 +179,9 @@ namespace AlterEgo.Controllers
             // Before running this, UpdateUsersCharacters and UpdateGuildRoster must have run first.
 
             var users = await _context.Users.Include(u => u.Characters).ToListAsync();
-            users.ForEach(user => 
+            users.ForEach(user =>
             {
-                var currentRank = user.Rank;
+                var currentRank = (int)GuildRank.Everyone;
                 var characters = _context.Characters.Where(c => c.User == user && c.Realm == Realm && c.Guild == GuildName).ToList();
                 characters.ForEach(character =>
                 {

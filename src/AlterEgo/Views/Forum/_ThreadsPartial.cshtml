@@ -11,7 +11,7 @@
                 @foreach (var thread in Model)
                 {
                     var latestPost = thread.Posts.OrderByDescending(post => post.PostedAt).Where(post => !post.IsDeleted).First();
-                    var replies = (thread.Posts.Count - 1);
+                    var replies = (thread.Posts.Where(p => !p.IsDeleted).Count() - 1);
                     <tr>
                         <td class="col-lg-7">
                             @if (thread.IsStickied)

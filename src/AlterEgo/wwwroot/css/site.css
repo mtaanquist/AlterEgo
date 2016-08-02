@@ -15,6 +15,14 @@ abbr.timeago {
     background-color: #393C45;
 }
 
+.img-race .img-responsive {
+    margin: 0 auto;
+}
+
+.img-class .img-responsive {
+    margin: 0 auto;
+}
+
 /* World of Warcraft class colours */
 .class-death-knight {
     color: #c41f3b;

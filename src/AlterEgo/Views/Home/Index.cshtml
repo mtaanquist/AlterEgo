@@ -25,7 +25,7 @@
     <div class="col-lg-5">
         <h2>Recent News</h2>
         <ul class="list-unstyled">
-            @*@foreach (var item in Model.News)
+            @foreach (var item in Model.News.Take(100))
             {
                 var dateTimeOffset = DateTimeOffset.FromUnixTimeMilliseconds(item.Timestamp);
                 var normalizedClassName = $"class-{item.GuildCharacter.CharacterClass.Name.Replace(' ', '-').ToLower()}";
@@ -38,7 +38,7 @@
                         @Html.Raw($"<li><a href=\"#\" class=\"{normalizedClassName}\">{item.GuildCharacter.Name}</a> obtained the achievement <a href=\"//www.wowhead.com/achievement={item.Achievement.Id}\">{item.Achievement.Title}</a>. <abbr class=\"timeago\" title=\"{dateTimeOffset.DateTime:O}\">{dateTimeOffset.DateTime:d}</abbr></li>")
                         break;
                 }
-            }*@
+            }
         </ul>
     </div>
 </div>

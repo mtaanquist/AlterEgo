@@ -173,6 +173,21 @@ namespace AlterEgo.Controllers
             var result = await _signInManager.ExternalLoginSignInAsync(info.LoginProvider, info.ProviderKey, isPersistent: false);
             if (result.Succeeded)
             {
+                // Update user
+                var userName = info.Principal.Claims.SingleOrDefault(c => c.Type.EndsWith("claims/name")).Value;
+                var user = await _userManager.FindByNameAsync(userName);
+
+                if (user != null)
+                {
+                    var accessToken = info.AuthenticationTokens.Single(x => x.Name.Equals("access_token")).Value;
+                    var accessTokenExpiry = info.AuthenticationTokens.Single(x => x.Name.Equals("expires_at")).Value;
+
+                    user.AccessToken = accessToken;
+                    user.AccessTokenExpiry = accessTokenExpiry;
+
+                    await _userManager.UpdateAsync(user);
+                }
+
                 _logger.LogInformation(5, "User logged in with {Name} provider.", info.LoginProvider);
                 return RedirectToLocal(returnUrl);
             }
@@ -244,20 +259,6 @@ namespace AlterEgo.Controllers
                     }
                 }
                 AddErrors(result);
-
-                // Get user's characters
-                // Get characters
-                var characters = await _context.Characters.Include(x => x.CharacterClass).Include(x => x.CharacterRace).Where(c => c.User == user).ToListAsync();
-                if (characters == null || !characters.Any())
-                {
-                    characters = await BattleNetApi.GetUserCharacters(accessToken);
-
-                    characters.ForEach(c => c.User = user);
-                    characters.ForEach(c => c.CharacterRace = _context.Races.SingleOrDefault(r => r.Id == c.Race));
-                    characters.ForEach(c => c.CharacterClass = _context.Classes.SingleOrDefault(cl => cl.Id == c.Class));
-                    _context.Characters.AddRange(characters);
-                    await _context.SaveChangesAsync();
-                }
             }
 
             ViewData["ReturnUrl"] = returnUrl;

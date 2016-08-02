@@ -24,7 +24,13 @@ namespace AlterEgo.Controllers
 
         public async Task<IActionResult> Index()
         {
-            return View();
+            var model = new IndexViewModel
+            {
+                News = await _context.News.OrderBy(x => x.Timestamp).ToListAsync(),
+            };
+
+            //return View(model);
+            return RedirectToAction("Index", "Forum");
         }
 
         public IActionResult About()

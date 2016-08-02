@@ -6,6 +6,7 @@ using AlterEgo.Models.GuildViewModels;
 using AlterEgo.Services;
 using AlterEgo.Data;
 using AlterEgo.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace AlterEgo.Controllers
 {
@@ -22,20 +23,17 @@ namespace AlterEgo.Controllers
 
         public async Task<IActionResult> Roster()
         {
+            var roster = await _context.Members
+                .Include(member => member.Character)
+                .ThenInclude(character => character.CharacterClass)
+                .Include(member => member.Character)
+                .ThenInclude(character => character.CharacterRace)
+                .ToListAsync();
+
             var model = new RosterViewModel
             {
-                Members = await BattleNetApi.GetGuildRoster("Argent Dawn", "Alter Ego")
+                Members = roster
             };
-
-            var characters = new List<Character>();
-            model.Members.ForEach(m =>
-            {
-                m.Character.CharacterRace = _context.Races.SingleOrDefault(r => r.Id == m.Character.Race);
-                m.Character.CharacterClass = _context.Classes.SingleOrDefault(cl => cl.Id == m.Character.Class);
-                characters.Add(m.Character);
-            });
-
-            await _battleNetDbHelper.UpdateStoredCharactersAsync(characters, null, "Alter Ego");
 
             return View(model);
         }

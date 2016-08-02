@@ -55,6 +55,10 @@ namespace AlterEgo.Services
                     var responseString = await response.Content.ReadAsStringAsync();
                     result = JObject.Parse(responseString).SelectToken("characters").ToObject<List<Character>>();
                 }
+                else if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+                {
+                    return null;
+                }
             }
 
             return result;
