@@ -60,8 +60,10 @@ namespace AlterEgo
                 options.ConfigureDefault();
             });
 
+            services.Configure<BattleNetOptions>(Configuration.GetSection("BattleNet"));
+
             // Add scoped services
-            services.AddScoped<BattleNetDbHelper>();
+            services.AddScoped<BattleNetApi>();
 
             // Add application services.
             services.AddTransient<IEmailSender, AuthMessageSender>();
@@ -127,8 +129,8 @@ namespace AlterEgo
             // Add external authentication middleware below. To configure them please see http://go.microsoft.com/fwlink/?LinkID=532715
             app.UseBattleNetAuthentication(new BattleNetAuthenticationOptions()
             {
-                ClientId = Configuration["Authentication:BattleNet:ClientId"],
-                ClientSecret = Configuration["Authentication:BattleNet:ClientSecret"],
+                ClientId = Configuration.GetSection("BattleNet").GetValue<string>("ClientId"),
+                ClientSecret = Configuration.GetSection("BattleNet").GetValue<string>("ClientSecret"),
 
                 Region = BattleNetAuthenticationRegion.Europe,
                 SaveTokens = true,

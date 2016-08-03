@@ -1,17 +1,34 @@
+﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
-namespace AlterEgo.Models.ForumViewModels
+namespace AlterEgo.Models.AdminViewModels
 {
-    public sealed class AdminToolboxViewModel
+    public class AdminIndexViewModel
     {
-        // Meta
+        #region Categories
+
         public List<Category> Categories { get; set; }
 
-        // New category
+        // Create
         public string CategoryName { get; set; }
         public int CategoryReadableBy { get; set; }
 
-        // New forum
+        // Update
+        public int CategorySortOrder { get; set; }
+
+        // Delete
+        public bool CategoryIsDeleted { get; set; }
+
+        #endregion
+
+        #region Forums
+
+        public List<Forum> Forums { get; set; }
+
+        // Create
         public string ForumName { get; set; }
         public string ForumDescription { get; set; }
         public int CategoryId { get; set; }
@@ -22,5 +39,13 @@ namespace AlterEgo.Models.ForumViewModels
         public int ForumCanStickyThreads { get; set; } = (int)GuildRank.ForumAdmin;
         public int ForumCanEditThreads { get; set; } = (int)GuildRank.ForumAdmin;
         public int ForumCanDeleteThreads { get; set; } = (int)GuildRank.ForumAdmin;
+
+        // Update
+        public int ForumSortOrder { get; set; }
+
+        // Delete
+        public bool ForumIsDeleted { get; set; }
+
+        #endregion
     }
 }

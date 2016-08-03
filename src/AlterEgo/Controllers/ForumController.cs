@@ -49,6 +49,7 @@ namespace AlterEgo.Controllers
                         .Include(category => category.Forums)
                             .ThenInclude(forum => forum.Threads)
                             .ThenInclude(thread => thread.Posts)
+                        .Where(category => (user.Rank <= category.ReadableBy))
                         .ToListAsync();
 
             var latestPosts = new Dictionary<int, Post>();
@@ -461,7 +462,8 @@ namespace AlterEgo.Controllers
                     CategoryId = category.CategoryId,
 
                     ReadableBy = model.ForumReadableBy,
-                    WritableBy = model.ForumWritableBy,
+                    CanStartThreads = model.ForumCanStartThreads,
+                    CanReplyToThreads = model.ForumCanReplyToThreads,
 
                     CanLockThreads = model.ForumCanLockThreads,
                     CanStickyThreads = model.ForumCanStickyThreads,

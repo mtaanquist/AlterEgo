@@ -13,12 +13,10 @@ namespace AlterEgo.Controllers
     public class GuildController : Controller
     {
         private readonly ApplicationDbContext _context;
-        private readonly BattleNetDbHelper _battleNetDbHelper;
 
-        public GuildController(ApplicationDbContext context, BattleNetDbHelper battleNetDbHelper)
+        public GuildController(ApplicationDbContext context)
         {
             _context = context;
-            _battleNetDbHelper = battleNetDbHelper;
         }
 
         public async Task<IActionResult> Roster()

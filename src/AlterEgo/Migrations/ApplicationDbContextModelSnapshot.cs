@@ -214,6 +214,10 @@ namespace AlterEgo.Migrations
 
                     b.Property<int>("CanLockThreads");
 
+                    b.Property<int>("CanReplyToThreads");
+
+                    b.Property<int>("CanStartThreads");
+
                     b.Property<int>("CanStickyThreads");
 
                     b.Property<int>("CategoryId");
@@ -227,8 +231,6 @@ namespace AlterEgo.Migrations
                     b.Property<int>("ReadableBy");
 
                     b.Property<int>("SortOrder");
-
-                    b.Property<int>("WritableBy");
 
                     b.HasKey("ForumId");
 

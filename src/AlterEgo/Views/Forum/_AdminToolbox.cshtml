@@ -71,8 +71,8 @@
                                                     <select asp-for="ForumReadableBy" asp-items="Html.GetEnumSelectList<GuildRank>()" class="form-control"></select>
                                                 </div>
                                                 <div class="form-group">
-                                                    <label asp-for="ForumWritableBy">Who can post new threads in the forum?</label>
-                                                    <select asp-for="ForumWritableBy" asp-items="Html.GetEnumSelectList<GuildRank>()" class="form-control"></select>
+                                                    <label asp-for="ForumCanStartThreads">Who can post new threads in the forum?</label>
+                                                    <select asp-for="ForumCanStartThreads" asp-items="Html.GetEnumSelectList<GuildRank>()" class="form-control"></select>
                                                     <p class="help-block">Every rank should be read as "name of rank (and above)". If a category is set to only be readable by officers, then any with a lower rank will not be able to see it. Similarly, if set to "Guild Leader", then no one but the leader can read it.</p>
                                                 </div>
                                                 <button type="submit" class="btn btn-default">Submit</button>

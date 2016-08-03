@@ -20,7 +20,6 @@ namespace AlterEgo.Controllers
         private readonly ISmsSender _smsSender;
         private readonly ILogger _logger;
         private readonly ApplicationDbContext _context;
-        private readonly BattleNetDbHelper _battleNetDbHelper;
 
         public ManageController(
         UserManager<ApplicationUser> userManager,
@@ -28,8 +27,7 @@ namespace AlterEgo.Controllers
         IEmailSender emailSender,
         ISmsSender smsSender,
         ILoggerFactory loggerFactory,
-        ApplicationDbContext context,
-        BattleNetDbHelper battleNetDbHelper
+        ApplicationDbContext context
         )
         {
             _userManager = userManager;
@@ -38,7 +36,6 @@ namespace AlterEgo.Controllers
             _smsSender = smsSender;
             _logger = loggerFactory.CreateLogger<ManageController>();
             _context = context;
-            _battleNetDbHelper = battleNetDbHelper;
         }
 
         //
@@ -68,11 +65,7 @@ namespace AlterEgo.Controllers
             }
 
             var accessToken = User.Claims.SingleOrDefault(x => x.Type.Equals("BattleNetAccessToken")).Value;
-            var characters = await BattleNetApi.GetUserCharacters(accessToken);
-            characters.ForEach(c => c.User = user);
-
-            // Update the stored characters in the database
-            await _battleNetDbHelper.UpdateStoredCharactersAsync(characters, user);
+            var characters = _context.Characters.Where(character => character.User == user).ToList();
 
             var model = new IndexViewModel
             {

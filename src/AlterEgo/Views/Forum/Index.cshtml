@@ -23,7 +23,7 @@
             <h3 class="page-header">@category.Name</h3>
             <div class="row">
 
-                @foreach (var forum in category.Forums.OrderBy(forum => forum.ForumId))
+                @foreach (var forum in category.Forums.Where(forum => forum.ReadableBy >= currentUser.Rank).OrderBy(forum => forum.ForumId))
                 {
 
                     <div class="view-header">
@@ -82,7 +82,7 @@
         }
         <div class="panel-body">
             <small>
-                @string.Join(", ", Model.ActiveUsers);
+                @string.Join(", ", Model.ActiveUsers)
             </small>
         </div>
     </div>

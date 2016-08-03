@@ -15,58 +15,71 @@
             {
                 panelClass += " panel-c-white";
             }
-            else if (post.Author.Rank < 2)
+            else if (post.Author.Rank == 0)
+            {
+                panelClass += " panel-c-danger";
+            }
+            else if (post.Author.Rank == 1)
             {
                 panelClass += " panel-c-info";
             }
+            else if (post.Author.Rank == 2)
+            {
+                panelClass += " panel-c-success";
+            }
+
             if (postCount % 2 != 0)
             {
                 panelClass += " panel-filled";
             }
+            else
+            {
+                panelClass += " panel-filled-even";
+            }
 
-                <div class="@Html.Raw(panelClass) post" data-forum-thread-id="@post.ThreadId" data-forum-post-id="@post.PostId" id="@Html.Raw($"post{post.PostId}")">
-                    <div class="panel-heading">
-                        @post.Author, at @post.PostedAt.ToString("G")
-                        <span class="pull-right">
-                            <a class="anchor" href="#@Html.Raw($"post{post.PostId}")">Post #@postCount</a>
-                        </span>
-                    </div>
-                    <div class="panel-body">
-                        @Html.Raw(post.FormattedContent)
+            <div class="@Html.Raw(panelClass) post" data-forum-thread-id="@post.ThreadId" data-forum-post-id="@post.PostId" id="@Html.Raw($"post{post.PostId}")">
+                <div class="panel-heading">
+                    @post.Author, at @post.PostedAt.ToString("G")
+                    <span class="pull-right">
+                        <small><a class="anchor" href="#@Html.Raw($"post{post.PostId}")">Post #@postCount</a></small>
+                    </span>
+                </div>
+                <div class="panel-body post-body">
+                    @Html.Raw(post.FormattedContent)
 
-                        @if (post.EditedAt > DateTime.MinValue)
+                    @if (post.EditedAt > DateTime.MinValue)
+                    {
+                        <br />
+                        <small>
+                            <em><i class="fa fa-exclamation-triangle" aria-hidden="true"></i> Edited by @post.Editor, at @post.EditedAt.ToString("g")</em>
+                        </small>
+                    }
+                </div>
+                <div class="panel-footer">
+
+                    <div class="text-right">
+                        @if (currentUser.IsModerator)
                         {
-                            <br />
-                            <small>
-                                <em><i class="fa fa-exclamation-triangle" aria-hidden="true"></i> Edited by @post.Editor, at @post.EditedAt.ToString("g")</em>
-                            </small>
+                            if (!post.IsFirstPost)
+                            {
+                                <a asp-controller="Forum" asp-action="DeletePost" asp-route-id="@post.PostId" class="btn btn-sm btn-danger">Delete</a>
+                            }
+                        }
+                        @*<button type="button" class="btn btn-sm btn-default">Quote</button>*@
+                        @if (UserManager.GetUserName(User).Equals(post.Author.ToString()) || currentUser.IsModerator)
+                        {
+                            if (post.IsFirstPost)
+                            {
+                                <a asp-controller="Forum" asp-action="EditThread" asp-route-id="@post.ThreadId" class="btn btn-sm btn-default">Edit Thread</a>
+                            }
+                            else
+                            {
+                                <a asp-controller="Forum" asp-action="EditPost" asp-route-id="@post.PostId" class="btn btn-sm btn-default">Edit</a>
+                            }
                         }
                     </div>
-                    <div class="panel-footer">
-
-                        <div class="text-right">
-                            @if (currentUser.IsModerator)
-                            {
-                                if (!post.IsFirstPost)
-                                {
-                                    <a asp-controller="Forum" asp-action="DeletePost" asp-route-id="@post.PostId" class="btn btn-sm btn-danger">Delete</a>
-                                }
-                            }
-                            @*<button type="button" class="btn btn-sm btn-default">Quote</button>*@
-                            @if (UserManager.GetUserName(User).Equals(post.Author.ToString()) || currentUser.IsModerator)
-                            {
-                                if (post.IsFirstPost)
-                                {
-                                    <a asp-controller="Forum" asp-action="EditThread" asp-route-id="@post.ThreadId" class="btn btn-sm btn-default">Edit Thread</a>
-                                }
-                                else
-                                {
-                                    <a asp-controller="Forum" asp-action="EditPost" asp-route-id="@post.PostId" class="btn btn-sm btn-default">Edit</a>
-                                }
-                            }
-                        </div>
-                    </div>
                 </div>
+            </div>
 
             postCount++;
         }

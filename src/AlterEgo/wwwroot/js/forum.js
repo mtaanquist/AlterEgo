@@ -48,8 +48,11 @@
             timeout = setTimeout(function () {
                 $.post("/forum/updateuserlatestreadpost", { threadId: threadId, postId: postId });
             }, 500);
-            
         });
+    }
+
+    if ($(".post-body").length) {
+        $(".post-body table").addClass("table table-condensed table-responsive table-bordered");
     }
 
 });

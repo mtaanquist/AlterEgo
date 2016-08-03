@@ -7,8 +7,11 @@ namespace AlterEgo.Models
         public int ForumId { get; set; }
         public string Name { get; set; }
         public string Description { get; set; }
+
+        // Permissions
         public int ReadableBy { get; set; }
-        public int WritableBy { get; set; }
+        public int CanStartThreads { get; set; }
+        public int CanReplyToThreads { get; set; }
         public int CanLockThreads { get; set; }
         public int CanStickyThreads { get; set; }
         public int CanEditThreads { get; set; }

@@ -14,12 +14,10 @@ namespace AlterEgo.Controllers
     public class HomeController : Controller
     {
         private readonly ApplicationDbContext _context;
-        private readonly BattleNetDbHelper _battleNetDbHelper;
 
-        public HomeController(ApplicationDbContext context, BattleNetDbHelper battleNetDbHelper)
+        public HomeController(ApplicationDbContext context)
         {
             _context = context;
-            _battleNetDbHelper = battleNetDbHelper;
         }
 
         public async Task<IActionResult> Index()

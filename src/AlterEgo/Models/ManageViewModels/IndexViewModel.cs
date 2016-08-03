@@ -18,6 +18,6 @@ namespace AlterEgo.Models.ManageViewModels
 
         public bool BrowserRemembered { get; set; }
 
-        public IList<Character> Characters { get; set; }
+        public List<Character> Characters { get; set; }
     }
 }

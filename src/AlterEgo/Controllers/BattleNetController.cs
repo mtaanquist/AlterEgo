@@ -7,8 +7,10 @@ using AlterEgo.Helpers;
 using AlterEgo.Models;
 using AlterEgo.Services;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 namespace AlterEgo.Controllers
 {
@@ -20,17 +22,23 @@ namespace AlterEgo.Controllers
         private const string Realm = "Argent Dawn";
 
         private readonly ApplicationDbContext _context;
+        private readonly BattleNetApi _battleNetApi;
+        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly IOptions<BattleNetOptions> _options;
 
-        public BattleNetController(ApplicationDbContext context)
+        public BattleNetController(ApplicationDbContext context, BattleNetApi battleNetApi, UserManager<ApplicationUser> userManager, IOptions<BattleNetOptions> options)
         {
             _context = context;
+            _battleNetApi = battleNetApi;
+            _userManager = userManager;
+            _options = options;
         }
 
         [Route("[action]")]
         [HttpGet]
         public async Task<IActionResult> UpdateNews()
         {
-            var news = await BattleNetApi.GetGuildNews(Realm, GuildName);
+            var news = await _battleNetApi.GetGuildNews(Realm, GuildName);
 
             var currentNewsEntries = _context.News.ToList();
             news.RemoveAll(x => !currentNewsEntries.Contains(x));
@@ -45,32 +53,35 @@ namespace AlterEgo.Controllers
         [HttpGet]
         public async Task<IActionResult> UpdateUserCharacters()
         {
-            var users = _context.Users.AsNoTracking().ToList();
-            var storedCharacters = _context.Characters.Include(c => c.User).AsNoTracking().ToList();
-
+            var users = _context.Users.ToList();
+            var storedCharacters = _context.Characters.AsNoTracking().ToList();
+            
             var characters = new List<Character>();
             await users.ForEachAsync(async user =>
             {
                 if (!string.IsNullOrEmpty(user.AccessToken))
                 {
-                    var userCharacters = await BattleNetApi.GetUserCharacters(user.AccessToken);
+                    try
+                    {
+                        var userCharacters = await _battleNetApi.GetUserCharacters(user.AccessToken);
 
-                    if (userCharacters != null)
-                    {
-                        userCharacters.ForEach(c =>
+                        if (userCharacters != null)
                         {
-                            c.User = user;
-                            c.CharacterRace = _context.Races.SingleOrDefault(r => r.Id == c.Race);
-                            c.CharacterClass = _context.Classes.SingleOrDefault(cl => cl.Id == c.Class);
-                        });
-                        characters.AddRange(userCharacters);
+                            userCharacters.ForEach(c =>
+                            {
+                                c.User = user;
+                                c.UserId = user.Id;
+                                c.CharacterRace = _context.Races.SingleOrDefault(r => r.Id == c.Race);
+                                c.CharacterClass = _context.Classes.SingleOrDefault(cl => cl.Id == c.Class);
+                            });
+                            characters.AddRange(userCharacters);
+                        }
                     }
-                    else
+                    catch (UnauthorizedAccessException)
                     {
-                        user.AccessToken = string.Empty;
-                        user.AccessTokenExpiry = string.Empty;
-                        _context.Update(user);
-                        await _context.SaveChangesAsync();
+                        user.AccessToken = "";
+                        user.AccessTokenExpiry = "";
+                        await _userManager.UpdateAsync(user);
                     }
                 }
             });
@@ -84,13 +95,13 @@ namespace AlterEgo.Controllers
             var removedCharacters =
                 storedCharacters.Where(c => !characters.Any(x => c.Name == x.Name && c.Realm == x.Realm))
                     .ToList();
-            removedCharacters.RemoveAll(c => c.User == null);
+            removedCharacters.RemoveAll(c => c.UserId == null);
             _context.RemoveRange(removedCharacters);
 
             var changedCharacters =
                 characters.Where(c => storedCharacters.Any(x => c.Name == x.Name && c.Realm == x.Realm))
                     .ToList();
-            changedCharacters.RemoveAll(c => c.User == null);
+            changedCharacters.RemoveAll(c => c.UserId == null);
             _context.UpdateRange(changedCharacters);
 
             await _context.SaveChangesAsync();
@@ -102,7 +113,7 @@ namespace AlterEgo.Controllers
         [HttpGet]
         public async Task<IActionResult> UpdateGuildRoster()
         {
-            var roster = await BattleNetApi.GetGuildRoster(Realm, GuildName);
+            var roster = await _battleNetApi.GetGuildRoster(Realm, GuildName);
 
             var characters = new List<Character>();
             roster.ForEach(member => characters.Add(member.Character));
@@ -177,8 +188,7 @@ namespace AlterEgo.Controllers
         public async Task<IActionResult> UpdateGuildRanks()
         {
             // Before running this, UpdateUsersCharacters and UpdateGuildRoster must have run first.
-
-            var users = await _context.Users.Include(u => u.Characters).ToListAsync();
+            var users = await _context.Users.ToListAsync();
             users.ForEach(user =>
             {
                 var currentRank = (int)GuildRank.Everyone;
