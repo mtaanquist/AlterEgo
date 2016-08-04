@@ -65,7 +65,7 @@ namespace AlterEgo.Controllers
                 latestPosts.Add(f.ForumId, latestPost);
             }));
 
-            var activeUsers = await _context.Users.Where(u => u.LastActivity > DateTime.Now.Subtract(new TimeSpan(0, 15, 0))).ToListAsync();
+            var activeUsers = await _context.Users.Where(u => u.LastActivity > DateTime.UtcNow.Subtract(new TimeSpan(0, 15, 0))).ToListAsync();
             var totalThreads = _context.Threads.Where(t => !t.IsDeleted).Count();
             var totalPosts = _context.Posts.Where(p => !p.IsDeleted).Count() - totalThreads;
             var totalMembers = _context.Users.Count();
@@ -212,7 +212,7 @@ namespace AlterEgo.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> NewThread(NewThreadViewModel model)
         {
-            var postDateTime = DateTime.Now;
+            var postDateTime = DateTime.UtcNow;
             var author = await _userManager.GetUserAsync(HttpContext.User);
             var forum =
                 await _context.Forums.Include(f => f.Category).SingleOrDefaultAsync(f => f.ForumId == model.ForumId);
@@ -275,7 +275,7 @@ namespace AlterEgo.Controllers
             if (ModelState.IsValid)
             {
                 var author = await _userManager.GetUserAsync(HttpContext.User);
-                var editTime = DateTime.Now;
+                var editTime = DateTime.UtcNow;
 
                 var thread = await _context.Threads.SingleAsync(t => t.ThreadId == model.ThreadId);
                 var post = await _context.Posts.FirstAsync(p => p.PostId == model.PostId);
@@ -324,7 +324,7 @@ namespace AlterEgo.Controllers
             if (ModelState.IsValid)
             {
                 var author = await _userManager.GetUserAsync(HttpContext.User);
-                var editTime = DateTime.Now;
+                var editTime = DateTime.UtcNow;
 
                 post = await _context.Posts.Include(p => p.Thread).SingleOrDefaultAsync(p => p.PostId == model.PostId);
 
@@ -361,7 +361,7 @@ namespace AlterEgo.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> NewReply(NewReplyViewModel model)
         {
-            var postDateTime = DateTime.Now;
+            var postDateTime = DateTime.UtcNow;
             var author = await _userManager.GetUserAsync(HttpContext.User);
             var thread = await _context.Threads.SingleOrDefaultAsync(t => t.ThreadId == model.ThreadId);
             var forum = await _context.Forums.SingleOrDefaultAsync(f => f.ForumId == thread.ForumId);
@@ -395,7 +395,7 @@ namespace AlterEgo.Controllers
                 {
                     ApplicationUser = user,
                     ApplicationUserId = user.Id,
-                    LastRead = DateTime.Now,
+                    LastRead = DateTime.UtcNow,
                     LastReadPostId = postId,
                     ThreadId = threadId
                 };
@@ -587,7 +587,7 @@ namespace AlterEgo.Controllers
 
         private async Task UpdateUserActivity(ApplicationUser user)
         {
-            user.LastActivity = DateTime.Now;
+            user.LastActivity = DateTime.UtcNow;
             _context.Update(user);
             await _context.SaveChangesAsync();
         }
@@ -602,7 +602,7 @@ namespace AlterEgo.Controllers
                 {
                     ApplicationUserId = user.Id,
                     ApplicationUser = user,
-                    LastRead = DateTime.Now,
+                    LastRead = DateTime.UtcNow,
                     LastReadPostId = _context.Posts.Single(p => p.IsFirstPost && p.ThreadId == threadId).PostId,
                     ThreadId = threadId
                 };
@@ -611,7 +611,7 @@ namespace AlterEgo.Controllers
             }
             else
             {
-                threadActivity.LastRead = DateTime.Now;
+                threadActivity.LastRead = DateTime.UtcNow;
                 _context.Update(threadActivity);
             }
 

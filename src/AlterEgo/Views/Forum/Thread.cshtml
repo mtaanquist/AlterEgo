@@ -43,7 +43,7 @@
             <div class="header-title">
                 <h2>@Model.Thread.Name </h2>
                 <small>
-                    Started by @Model.Thread.Author, at @Model.Thread.CreatedAt.ToString("G")
+                    Started by @Model.Thread.Author, at @TimeZoneInfo.ConvertTime(Model.Thread.CreatedAt, TimeZoneInfo.Utc, TimeZoneInfo.FindSystemTimeZoneById(currentUser.LocalTimeZoneInfoId))
                 </small>
             </div>
         </div>
@@ -67,8 +67,6 @@
                 <a asp-controller="Forum" asp-action="@lockAction" asp-route-id="@Model.Thread.ThreadId" class="btn btn-warning">@lockLinkText</a>
 
                 <button id="delete-thread-button" type="button" class="btn btn-danger">Delete Thread</button>
-
-                @*<a asp-controller="Forum" asp-action="DeleteThread" asp-route-id="@Model.Thread.ThreadId" class="btn btn-danger">Delete Thread</a>*@
             }
         </div>
     </form>
@@ -77,9 +75,13 @@
         {
             <button type="button" class="btn btn-default" disabled="disabled">Thread Locked</button>
         }
+        else if (currentUser.Rank > Model.Thread.Forum.CanReplyToThreads)
+        {
+            <button type="button" class="btn btn-default" disabled="disabled">Cannot Post Reply</button>
+        }
         else
         {
-            <a asp-controller="Forum" asp-action="NewReply" asp-route-id="@Model.Thread.ThreadId" class="btn btn-default">Post New Reply</a>
+        <a asp-controller="Forum" asp-action="NewReply" asp-route-id="@Model.Thread.ThreadId" class="btn btn-default">Post New Reply</a>
         }
     </div>
 </div>
@@ -87,7 +89,7 @@
 <br />
 @await Html.PartialAsync("_PostsPartial", Model.PagedPosts)
 
-@if (!Model.Thread.IsLocked)
+@if (!Model.Thread.IsLocked || currentUser.Rank <= Model.Thread.Forum.CanReplyToThreads)
 {
     <div class="row">
         <div class="col-lg-12">

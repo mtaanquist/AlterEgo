@@ -1,7 +1,10 @@
 ﻿@model Sakura.AspNetCore.IPagedList<Thread>
 
+@inject UserManager<ApplicationUser> UserManager
+
 @{
     List<ThreadActivity> activities = ViewBag.ThreadActivities;
+    var currentUser = await UserManager.GetUserAsync(User);
 }
 
 <div class="row">
@@ -49,7 +52,7 @@
                                 <a asp-controller="Forum" asp-action="Thread" asp-route-id="@thread.ThreadId">@thread.Name</a><br />
                             }
 
-                            <small>Started by @thread.Author, at @thread.CreatedAt.ToString("g")</small>
+                            <small>Started by @thread.Author, at @TimeZoneInfo.ConvertTime(thread.CreatedAt, TimeZoneInfo.Utc, TimeZoneInfo.FindSystemTimeZoneById(currentUser.LocalTimeZoneInfoId))</small>
                         </td>
 
 
@@ -62,7 +65,9 @@
                             @if (latestPost != null)
                             {
                                 @latestPost.Author <a asp-controller="Forum" asp-action="LatestPost" asp-route-id="@latestPost.ThreadId" title="Go to latest post"><i class="fa fa-chevron-circle-right" aria-hidden="true"></i></a><br />
-                                    <abbr class="timeago" title="@latestPost.PostedAt.ToString("O")">@latestPost.PostedAt.ToString("g")</abbr>
+                                <abbr class="timeago" title="@TimeZoneInfo.ConvertTime(latestPost.PostedAt, TimeZoneInfo.Utc, TimeZoneInfo.FindSystemTimeZoneById(currentUser.LocalTimeZoneInfoId)).ToString("O")">
+                                    @TimeZoneInfo.ConvertTime(latestPost.PostedAt, TimeZoneInfo.Utc, TimeZoneInfo.FindSystemTimeZoneById(currentUser.LocalTimeZoneInfoId))
+                                </abbr>
                             }
                             else
                             {

@@ -1,7 +1,10 @@
 ﻿@model AlterEgo.Models.ForumViewModels.ThreadsViewModel
 
+@inject UserManager<ApplicationUser> UserManager
+
 @{
     ViewBag.Title = Model.Forum.Name;
+    var currentUser = await UserManager.GetUserAsync(User);
 }
 
 <div class="row">
@@ -35,7 +38,14 @@
 <div class="row">
     <div class="col-lg-12">
         <span class="pull-right">
-            <a asp-controller="Forum" asp-action="NewThread" asp-route-id="@Model.Forum.ForumId" class="btn btn-default">Start New Thread</a>
+            @if (currentUser.Rank > Model.Forum.CanStartThreads)
+            {
+                <button type="button" class="btn btn-default" disabled="disabled">Cannot Start Thread</button>
+            }
+            else
+            {
+                <a asp-controller="Forum" asp-action="NewThread" asp-route-id="@Model.Forum.ForumId" class="btn btn-default">Start New Thread</a>
+            }
         </span>
     </div>
 </div>

@@ -36,7 +36,7 @@
                                     <small>
                                         <a asp-controller="Forum" asp-action="LatestPost" asp-route-id="@latestPost.Thread.ThreadId">@latestPost.Thread.Name</a><br />
                                         By @latestPost.Author<br />
-                                        <span class="c-white">@latestPost.PostedAt.ToString("g")</span>
+                                        <span class="c-white">@TimeZoneInfo.ConvertTime(latestPost.PostedAt, TimeZoneInfo.Utc, TimeZoneInfo.FindSystemTimeZoneById(currentUser.LocalTimeZoneInfoId))</span>
                                     </small>
                                 }
                                 else

@@ -26,8 +26,6 @@ namespace AlterEgo
                 .AddJsonFile("appsettings.json", true, true)
                 .AddJsonFile($"appsettings.{env.EnvironmentName}.json", true);
 
-            builder.AddUserSecrets();
-
             builder.AddEnvironmentVariables();
             Configuration = builder.Build();
         }
@@ -43,7 +41,7 @@ namespace AlterEgo
 
             services.AddIdentity<ApplicationUser, IdentityRole>(options =>
                 {
-                    options.Cookies.ApplicationCookie.ExpireTimeSpan = TimeSpan.FromDays(30);
+                    options.Cookies.ApplicationCookie.ExpireTimeSpan = TimeSpan.FromDays(28);
                     options.User.AllowedUserNameCharacters =
                         "aáàäbcdeéèfghiíìjklmnoóòöpqrstuüvwxyzæøåAÁÀÄBCDEÉÈFGHIÍÌJKLMNOÓÒÖPQRSTUÜVWXYÆØÅZ0123456789#";
                 })
@@ -53,7 +51,7 @@ namespace AlterEgo
             services.AddMvc();
             services.AddRouting(options =>
             {
-                options.LowercaseUrls = true;
+                options.LowercaseUrls = true; 
             });
 
             services.AddBootstrapPagerGenerator(options => 
@@ -110,7 +108,7 @@ namespace AlterEgo
             }
             else
             {
-                app.UseExceptionHandler("/Home/Error");
+                app.UseExceptionHandler("/home/error");
             }
 
             app.Use(next => context =>

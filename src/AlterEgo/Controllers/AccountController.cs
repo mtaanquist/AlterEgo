@@ -25,6 +25,7 @@ namespace AlterEgo.Controllers
         private readonly ISmsSender _smsSender;
         private readonly ILogger _logger;
         private readonly ApplicationDbContext _context;
+        private readonly BattleNetApi _battleNetApi;
 
         public AccountController(
             UserManager<ApplicationUser> userManager,
@@ -32,7 +33,8 @@ namespace AlterEgo.Controllers
             IEmailSender emailSender,
             ISmsSender smsSender,
             ILoggerFactory loggerFactory,
-            ApplicationDbContext context)
+            ApplicationDbContext context,
+            BattleNetApi battleNetApi)
         {
             _userManager = userManager;
             _signInManager = signInManager;
@@ -40,6 +42,7 @@ namespace AlterEgo.Controllers
             _smsSender = smsSender;
             _logger = loggerFactory.CreateLogger<AccountController>();
             _context = context;
+            _battleNetApi = battleNetApi;
         }
 
         //
@@ -183,7 +186,9 @@ namespace AlterEgo.Controllers
                     var accessTokenExpiry = info.AuthenticationTokens.Single(x => x.Name.Equals("expires_at")).Value;
 
                     user.AccessToken = accessToken;
-                    user.AccessTokenExpiry = accessTokenExpiry;
+                    DateTime parsedDateTime;
+                    DateTime.TryParse(accessTokenExpiry, out parsedDateTime);
+                    user.AccessTokenExpiry = parsedDateTime;
 
                     await _userManager.UpdateAsync(user);
                 }
@@ -225,6 +230,9 @@ namespace AlterEgo.Controllers
                 // Get some information from the external auth
                 var accessToken = info.AuthenticationTokens.Single(x => x.Name.Equals("access_token")).Value;
                 var accessTokenExpiry = info.AuthenticationTokens.Single(x => x.Name.Equals("expires_at")).Value;
+                DateTime parsedDateTime;
+                DateTime.TryParse(accessTokenExpiry, out parsedDateTime);
+
                 var battleTag = info.Principal.Claims.Single(c => c.Type.Equals(ClaimTypes.Name)).Value;
 
                 var user = new ApplicationUser
@@ -232,16 +240,9 @@ namespace AlterEgo.Controllers
                     UserName = battleTag,
                     Email = model.Email,
                     AccessToken = accessToken,
-                    AccessTokenExpiry = accessTokenExpiry,
-                    Rank = 99,
-                    RegisteredAt = DateTime.Now
-                };
-
-                var claims = new List<Claim>
-                {
-                    new Claim("BattleTag", battleTag),
-                    new Claim("BattleNetAccessToken", accessToken),
-                    new Claim("BattleNetAccessTokenExpiry", accessTokenExpiry)
+                    AccessTokenExpiry = parsedDateTime,
+                    Rank = (int)GuildRank.Everyone,
+                    RegisteredAt = DateTime.UtcNow
                 };
 
                 var result = await _userManager.CreateAsync(user);
@@ -250,8 +251,10 @@ namespace AlterEgo.Controllers
                     result = await _userManager.AddLoginAsync(user, info);
                     if (result.Succeeded)
                     {
-                        // Add claims
-                        await _userManager.AddClaimsAsync(user, claims);
+                        // Update user's rank
+                        await _battleNetApi.UpdateUserCharactersAsync(user);
+                        await _battleNetApi.UpdateGuildRosterAsync();
+                        await _battleNetApi.UpdateGuildRanksAsync();
 
                         await _signInManager.SignInAsync(user, false);
                         _logger.LogInformation(6, "User created an account using {Name} provider.", info.LoginProvider);

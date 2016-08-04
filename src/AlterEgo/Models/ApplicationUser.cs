@@ -10,9 +10,12 @@ namespace AlterEgo.Models
     {
         // Access Token stuff
         public string AccessToken { get; set; }
-        public string AccessTokenExpiry { get; set;}
+        public DateTime AccessTokenExpiry { get; set;}
 
         public int Rank { get; set; }
+
+        // User Options
+        public string LocalTimeZoneInfoId { get; set; } = "Europe/Paris";
 
         // Last Activity
         public DateTime RegisteredAt { get; set; }
