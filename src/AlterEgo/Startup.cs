@@ -43,6 +43,7 @@ namespace AlterEgo
 
             services.AddIdentity<ApplicationUser, IdentityRole>(options =>
                 {
+                    options.Cookies.ApplicationCookie.ExpireTimeSpan = TimeSpan.FromDays(30);
                     options.User.AllowedUserNameCharacters =
                         "aáàäbcdeéèfghiíìjklmnoóòöpqrstuüvwxyzæøåAÁÀÄBCDEÉÈFGHIÍÌJKLMNOÓÒÖPQRSTUÜVWXYÆØÅZ0123456789#";
                 })
