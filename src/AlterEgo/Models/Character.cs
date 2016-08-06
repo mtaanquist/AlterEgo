@@ -36,6 +36,14 @@ namespace AlterEgo.Models
             var other = (Character)obj;
             return (this.Name == other.Name && this.Name == other.Realm);
         }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                return ((Name?.GetHashCode() ?? 0) * 397) ^ (Realm?.GetHashCode() ?? 0);
+            }
+        }
     }
 
     public class Spec
@@ -45,7 +53,7 @@ namespace AlterEgo.Models
         public string Description { get; set; }
         public string Role { get; set; }
         public int Order { get; set; }
-        
+
         public string BackgroundImage { get; set; }
         public string Icon { get; set; }
     }

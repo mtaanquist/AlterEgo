@@ -66,8 +66,8 @@ namespace AlterEgo.Controllers
             }));
 
             var activeUsers = await _context.Users.Where(u => u.LastActivity > DateTime.UtcNow.Subtract(new TimeSpan(0, 15, 0))).ToListAsync();
-            var totalThreads = _context.Threads.Where(t => !t.IsDeleted).Count();
-            var totalPosts = _context.Posts.Where(p => !p.IsDeleted).Count() - totalThreads;
+            var totalThreads = _context.Threads.Count(t => !t.IsDeleted);
+            var totalPosts = _context.Posts.Count(p => !p.IsDeleted) - totalThreads;
             var totalMembers = _context.Users.Count();
 
             var model = new IndexViewModel

@@ -15,5 +15,8 @@ namespace AlterEgo.Models.ManageViewModels
         public List<SelectListItem> TimeZones { get; set; }
 
         public List<Character> Characters { get; set; }
+        public bool HasPassword { get; set; }
+
+        public DateTime UserAccessTokenExpiry { get; set; }
     }
 }

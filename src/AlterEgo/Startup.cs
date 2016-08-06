@@ -44,6 +44,8 @@ namespace AlterEgo
                     options.Cookies.ApplicationCookie.ExpireTimeSpan = TimeSpan.FromDays(28);
                     options.User.AllowedUserNameCharacters =
                         "aáàäbcdeéèfghiíìjklmnoóòöpqrstuüvwxyzæøåAÁÀÄBCDEÉÈFGHIÍÌJKLMNOÓÒÖPQRSTUÜVWXYÆØÅZ0123456789#";
+                    options.Cookies.ApplicationCookie.LoginPath = "/account/login/";
+                    options.Cookies.ApplicationCookie.ReturnUrlParameter = "returnUrl";
                 })
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddDefaultTokenProviders();
@@ -51,6 +53,7 @@ namespace AlterEgo
             services.AddMvc();
             services.AddRouting(options =>
             {
+                options.AppendTrailingSlash = true;
                 options.LowercaseUrls = true; 
             });
 

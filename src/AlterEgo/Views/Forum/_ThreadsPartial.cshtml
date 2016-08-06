@@ -25,7 +25,7 @@
                             @{
                                 var hasNewPosts = false;
                                 var isNewThread = false;
-                                if (latestPost != null)
+                                if (latestPost != null && ViewBag.SearchTerm == null)
                                 {
                                     var activity = activities.SingleOrDefault(t => t.ThreadId == thread.ThreadId);
                                     if (activity != null)

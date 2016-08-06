@@ -6,25 +6,31 @@
     <title>@ViewData["Title"] - Alter Ego</title>
 
     <environment names="Development">
+        <link rel="stylesheet" href="~/lib/font-awesome/css/font-awesome.css" />
+        <link rel="stylesheet" href="~/lib/animate.css/animate.css" />
         <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.css" />
-        <link rel="stylesheet" href="~/lib/font-awesome/css/font-awesome.css"/>
+
         <link rel="stylesheet" href="~/css/pe-icons/pe-icon-7-stroke.css" />
         <link rel="stylesheet" href="~/css/pe-icons/helper.css" />
-        <link rel="stylesheet" href="~/css/stroke-icons/style.css"/>
-        <link rel="stylesheet" href="~/lib/simplemde/dist/simplemde.css"/>
-        <link rel="stylesheet" href="~/css/style.css"/>
+        <link rel="stylesheet" href="~/css/stroke-icons/style.css" />
+        <link rel="stylesheet" href="~/css/style.css" />
+
+        <link rel="stylesheet" href="~/lib/simplemde/dist/simplemde.css" />
         <link rel="stylesheet" href="~/css/site.css" />
     </environment>
     <environment names="Staging,Production">
+        <link rel="stylesheet" href="~/lib/font-awesome/css/font-awesome.min.css"/>
+        <link rel="stylesheet" href="~/lib/animate.css/animate.min.css" />
         <link rel="stylesheet" href="https://ajax.aspnetcdn.com/ajax/bootstrap/3.3.6/css/bootstrap.min.css"
               asp-fallback-href="~/lib/bootstrap/dist/css/bootstrap.min.css"
               asp-fallback-test-class="sr-only" asp-fallback-test-property="position" asp-fallback-test-value="absolute" />
-        <link rel="stylesheet" href="~/lib/font-awesome/css/font-awesome.min.css"/>
+
         <link rel="stylesheet" href="~/css/pe-icons/pe-icon-7-stroke.min.css" />
         <link rel="stylesheet" href="~/css/pe-icons/helper.min.css" />
         <link rel="stylesheet" href="~/css/stroke-icons/style.min.css"/>
+        <link rel="stylesheet" href="~/css/style.min.css" asp-append-version="true"/>
+
         <link rel="stylesheet" href="~/lib/simplemde/dist/simplemde.min.css" />
-        <link rel="stylesheet" href="~/css/style.min.css" asp-append-version="true" />
         <link rel="stylesheet" href="~/css/site.min.css" asp-append-version="true" />
     </environment>
 </head>
@@ -33,11 +39,9 @@
         @Html.Partial("_Navbar")
 
         <div class="container">
-            @RenderBody()
-            <hr />
-            <footer>
-                <p>&copy; 2016 - Alter Ego</p>
-            </footer>
+            <section class="content">
+                @RenderBody()
+            </section>
         </div>
     </div>
     <environment names="Development">
@@ -50,6 +54,7 @@
                 asp-fallback-test="window.jQuery && window.jQuery.fn && window.jQuery.fn.modal">
         </script>
         @* Further global script files should be added here *@
+        <script src="~/js/pace.min.js" asp-append-version="true"></script>
         <script src="~/lib/simplemde/dist/simplemde.min.js" asp-append-version="true"></script>
         <script src="~/lib/jquery-timeago/jquery.timeago.js" asp-append-version="true"></script>
         <script src="~/js/power.js" asp-append-version="true"></script>
@@ -65,6 +70,7 @@
                 asp-fallback-test="window.jQuery && window.jQuery.fn && window.jQuery.fn.modal">
         </script>
         @* Further global script files (minified) should be added here *@
+        <script src="~/js/pace.min.js" asp-append-version="true"></script>
         <script src="~/lib/simplemde/dist/simplemde.min.js" asp-append-version="true"></script>
         <script src="~/lib/jquery-timeago/jquery.timeago.min.js" asp-append-version="true"></script>
         <script src="~/js/power.min.js" asp-append-version="true"></script>

@@ -1,6 +1,6 @@
 ﻿@model ManageIndexViewModel
 @{
-    ViewBag.Title = "Manage Profile";
+    ViewBag.Title = "Manage Account";
 }
 
 <div class="row">
@@ -22,60 +22,110 @@
 </div>
 
 <div class="row">
-    <div class="col-lg-6">
-        <form asp-controller="Manage" asp-action="UpdateProfile" asp-antiforgery="true" method="post" role="form">
-            <div class="form-group">
-                <label asp-for="LocalTimeZoneInfoId"></label>
-                <select asp-for="LocalTimeZoneInfoId" asp-items="Model.TimeZones" class="form-control"></select>
-                <p class="help-block">Setting your local time zone will convert all times shown to that time zone. By default, the site uses Central European Standard Time, which is GMT + 1.</p>
+    <form asp-controller="Manage" asp-action="UpdateProfile" asp-antiforgery="true" method="post" role="form">
+        <div class="col-lg-12">
+            <div class="tabs-container">
+                <ul class="nav nav-tabs">
+                    <li class="active"><a data-toggle="tab" href="#account" aria-expanded="true"><i class="fa fa-cog" aria-hidden="true"></i> Account</a></li>
+                    <li class=""><a data-toggle="tab" href="#forum" aria-expanded="false"><i class="fa fa-sitemap" aria-hidden="true"></i> Forum</a></li>
+                    <li class=""><a data-toggle="tab" href="#characters" aria-expanded="false"><i class="fa fa-users" aria-hidden="true"></i> Characters</a></li>
+                </ul>
+                <div class="tab-content">
+                    <div id="account" class="tab-pane active">
+                        <div class="panel-body">
+                            <div class="col-lg-6">
+                                <div class="row">
+                                    <div class="form-group">
+                                        <h4>Account Password</h4>
+                                        <p>Create a password in order to be able to log in using just your BattleTag and the password. This is useful in case you wish to visit the site in places where access to Battle.net is restricted. Click the link below to manage your password.</p>
+
+                                        <div class="text-left">
+                                            @if (Model.HasPassword)
+                                            {
+                                                <a asp-controller="Manage" asp-action="ChangePassword" class="btn btn-accent">Change Password</a>
+                                            }
+                                            else
+                                            {
+                                                <a asp-controller="Manage" asp-action="SetPassword" class="btn btn-accent">Create Password</a>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-6">
+                                <h4>Battle.net Authorisation</h4>
+                                <p>In order to use the guild site, we need to have an active "link" between your account on the guild site, and Battle.net. You can manage the authorization to your Battle.net account here: <a href="https://eu.battle.net/account/management/authorizations.html">Manage Authorized Applications (Battle.net) <i class="fa fa-external-link" aria-hidden="true"></i></a></p>
+                                <p>An authorisation lasts for at most 30 days, but will be nulled if you revoke the permission, or reset your Battle.net password. Once expired, you will need be logged out, and asked to re-authorise. You can see below when this is next scheduled for.</p>
+
+                                <div class="alert alert-info">Your current authorization expires on @Model.UserAccessTokenExpiry.</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="forum" class="tab-pane">
+                        <div class="panel-body">
+                            <div class="row">
+                                <div class="col-lg-6">
+                                    <div class="form-group">
+                                        <h4>Set your local time zone</h4>
+                                        <p>If you need to, you can set your local time zone below, to have time spans shown correctly according to your location. By default, the site uses Central European Standard Time (matching the World of WarCraft server time), which is GMT + 1.</p>
+
+                                        <select asp-for="LocalTimeZoneInfoId" asp-items="Model.TimeZones" class="form-control"></select>
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-6">
+                                    <div class="form-group">
+                                        <label>Email Notifications [Not Yet Implemented]</label>
+                                        <p class="help-block">Define which events you would like to be notified about.</p>
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-12">
+                                    <button type="submit" class="btn btn-accent">Save changes</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="characters" class="tab-pane">
+                        <div class="panel-body">
+                            <div class="row">
+                                <div class="col-lg-12">
+                                    <h4>Main Character [Not Yet Implemented]</h4>
+                                    <p>Select your primary character here, which determines what character people will see on your public profile.</p>
+
+                                    <table class="table table-striped table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>Name</th>
+                                                <th class="text-center">Race</th>
+                                                <th class="text-center">Class</th>
+                                                <th class="text-center">Level</th>
+                                                <th class="text-center">Realm</th>
+                                                <th class="text-center">Guild</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var character in Model.Characters.Where(x => x.Level >= 91).OrderBy(x => x.Realm).ThenByDescending(x => x.Level).ThenBy(x => x.Name))
+                                            {
+                                                var lastModifiedOffset = DateTimeOffset.FromUnixTimeMilliseconds(character.LastModified);
+                                                var normalizedClassName = $"class-{character.CharacterClass.Name.Replace(' ', '-').ToLower()}";
+                                                <tr>
+                                                    <td class="@normalizedClassName">@character.Name</td>
+                                                    <td class="text-center"><img src="@Html.Raw($"/images/wow/icons/race_{character.Race}_{character.Gender}.jpg")" alt="@character.CharacterRace.Name" class="img-rounded" /></td>
+                                                    <td class="text-center"><img src="@Html.Raw($"/images/wow/icons/class_{character.Class}.jpg")" alt="@character.CharacterClass.Name" class="img-rounded" /></td>
+                                                    <td class="text-center">@character.Level</td>
+                                                    <td class="text-center">@character.Realm</td>
+                                                    <td class="text-center">@character.Guild</td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <button type="submit" class="btn btn-primary">Save Changes</button>
-        </form>
-    </div>
-
-    <div class="col-lg-6">
-        <div class="form-group">
-            <label>Email Notifications [Not Yet Implemented]</label>
-            <p class="help-block">Define which events you would like to be notified about.</p>
         </div>
-    </div>
-
-    <div class="col-lg-12">
-        <hr />
-    </div>
-</div>
-
-<div class="row">
-    <div class="col-lg-12">
-        <h4>Main Character [Not Yet Implemented]</h4>
-        <p>Select your primary character here, which determines what character people will see on your public profile.</p>
-
-        <table class="table table-striped table-hover">
-            <thead>
-                <tr>
-                    <th>Name</th>
-                    <th class="text-center">Race</th>
-                    <th class="text-center">Class</th>
-                    <th class="text-center">Level</th>
-                    <th class="text-center">Realm</th>
-                    <th class="text-center">Guild</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var character in Model.Characters.Where(x => x.Level >= 91).OrderBy(x => x.Realm).ThenByDescending(x => x.Level).ThenBy(x => x.Name))
-                {
-                    var lastModifiedOffset = DateTimeOffset.FromUnixTimeMilliseconds(character.LastModified);
-                    var normalizedClassName = $"class-{character.CharacterClass.Name.Replace(' ', '-').ToLower()}";
-                    <tr>
-                        <td class="@normalizedClassName">@character.Name</td>
-                        <td class="text-center"><img src="@Html.Raw($"/images/wow/icons/race_{character.Race}_{character.Gender}.jpg")" alt="@character.CharacterRace.Name" class="img-rounded" /></td>
-                        <td class="text-center"><img src="@Html.Raw($"/images/wow/icons/class_{character.Class}.jpg")" alt="@character.CharacterClass.Name" class="img-rounded" /></td>
-                        <td class="text-center">@character.Level</td>
-                        <td class="text-center">@character.Realm</td>
-                        <td class="text-center">@character.Guild</td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-    </div>
+    </form>
 </div>
