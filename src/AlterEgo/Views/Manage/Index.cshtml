@@ -33,8 +33,9 @@
                 <div class="tab-content">
                     <div id="account" class="tab-pane active">
                         <div class="panel-body">
-                            <div class="col-lg-6">
-                                <div class="row">
+                            <div class="row">
+                                <div class="col-lg-6">
+
                                     <div class="form-group">
                                         <h4>Account Password</h4>
                                         <p>Create a password in order to be able to log in using just your BattleTag and the password. This is useful in case you wish to visit the site in places where access to Battle.net is restricted. Click the link below to manage your password.</p>
@@ -51,13 +52,17 @@
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                            <div class="col-lg-6">
-                                <h4>Battle.net Authorisation</h4>
-                                <p>In order to use the guild site, we need to have an active "link" between your account on the guild site, and Battle.net. You can manage the authorization to your Battle.net account here: <a href="https://eu.battle.net/account/management/authorizations.html">Manage Authorized Applications (Battle.net) <i class="fa fa-external-link" aria-hidden="true"></i></a></p>
-                                <p>An authorisation lasts for at most 30 days, but will be nulled if you revoke the permission, or reset your Battle.net password. Once expired, you will need be logged out, and asked to re-authorise. You can see below when this is next scheduled for.</p>
 
-                                <div class="alert alert-info">Your current authorization expires on @Model.UserAccessTokenExpiry.</div>
+
+                                <div class="col-lg-6">
+                                    <h4>Battle.net Authorisation</h4>
+                                    <p>
+                                        In order to use the guild site, we need to have an active "link" between your account on the guild site, and Battle.net. You can manage the authorization to your Battle.net account here: <a href="https://eu.battle.net/account/management/authorizations.html">Manage Authorized Applications (Battle.net) <i class="fa fa-external-link" aria-hidden="true"></i></a>
+                                    </p>
+                                    <p>An authorisation lasts for at most 30 days, but will be nulled if you revoke the permission, or reset your Battle.net password. Once expired, you will need be logged out, and asked to re-authorise. You can see below when this is next scheduled for.</p>
+
+                                    <div class="alert alert-info">Your current authorization expires on @Model.UserAccessTokenExpiry.</div>
+                                </div>
                             </div>
                         </div>
                     </div>

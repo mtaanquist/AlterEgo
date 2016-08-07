@@ -73,7 +73,7 @@ namespace AlterEgo.Controllers
                 {
                     Text = tz.Id,
                     Value = tz.Id,
-                    Selected = (tz.Id == "Europe/Paris")
+                    Selected = user.LocalTimeZoneInfoId == tz.Id
                 });
             }
 

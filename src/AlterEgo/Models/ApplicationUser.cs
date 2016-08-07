@@ -50,6 +50,7 @@ namespace AlterEgo.Models
         public ApplicationUser ApplicationUser { get; set; }
 
         public int ThreadId { get; set; }
+        public int ForumId { get; set; }
         public DateTime LastRead { get; set; }
         public int LastReadPostId { get; set; }
     }

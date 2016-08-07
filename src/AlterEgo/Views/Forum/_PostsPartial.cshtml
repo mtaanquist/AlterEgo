@@ -37,7 +37,7 @@
                 panelClass += " panel-filled-even";
             }
 
-            <div class="@Html.Raw(panelClass) post" data-forum-thread-id="@post.ThreadId" data-forum-post-id="@post.PostId" id="@Html.Raw($"post{post.PostId}")">
+            <div class="@Html.Raw(panelClass) post" data-forum-id="@post.Thread.ForumId" data-forum-thread-id="@post.ThreadId" data-forum-post-id="@post.PostId" id="@Html.Raw($"post{post.PostId}")">
                 <div class="panel-heading">
                     @post.Author, at @TimeZoneInfo.ConvertTime(post.PostedAt, TimeZoneInfo.Utc, TimeZoneInfo.FindSystemTimeZoneById(currentUser.LocalTimeZoneInfoId))
                     <span class="pull-right">
@@ -86,4 +86,8 @@
     </div>
 </div>
 
-<pager source="Model" />
+<div class="row">
+    <div class="col-lg-12">
+        <pager source="Model" />
+    </div>
+</div>

@@ -4,7 +4,7 @@
 
         var simplemde = new SimpleMDE({
             forceSync: true,
-            toolbar: ["bold", "italic", "heading", "|", "quote", "image", "link", "|", "code", "|", "guide"],
+            toolbar: ["bold", "italic", "heading", "|", "quote", "image", "link", "|", "code", "table", "|", "guide"],
             promptURLs: true,
             spellChecker: false
         });
@@ -41,12 +41,13 @@
 
         var timeout;
         $(".post").on("appear", function () {
+            var forumId = $(this).data("forum-id");
             var threadId = $(this).data("forum-thread-id");
             var postId = $(this).data("forum-post-id");
 
             clearTimeout(timeout);
             timeout = setTimeout(function () {
-                $.post("/forum/updateuserlatestreadpost", { threadId: threadId, postId: postId });
+                $.post("/forum/updateuserlatestreadpost", { threadId: threadId, postId: postId, forumId: forumId });
             }, 500);
         });
     }

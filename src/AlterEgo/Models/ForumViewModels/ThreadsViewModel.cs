@@ -7,6 +7,7 @@ namespace AlterEgo.Models.ForumViewModels
     {
         public List<Thread> Threads { get; set; }
         public IPagedList<Thread> PagedThreads { get; set; }
+        public List<ApplicationUser> ActiveUsers { get; set; }
 
         public Forum Forum { get; set; }
     }

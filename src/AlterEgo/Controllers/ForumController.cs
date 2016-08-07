@@ -70,7 +70,10 @@ namespace AlterEgo.Controllers
             var totalPosts = _context.Posts.Count(p => !p.IsDeleted) - totalThreads;
             var totalMembers = _context.Users.Count();
 
-            var model = new IndexViewModel
+            var threadActivities = _context.ThreadActivities.Where(t => t.ApplicationUserId == user.Id).ToList();
+            ViewBag.ThreadActivities = threadActivities;
+
+            var model = new ForumIndexViewModel
             {
                 Categories = categories,
                 LatestPosts = latestPosts,
@@ -144,10 +147,16 @@ namespace AlterEgo.Controllers
                         .ToListAsync();
 
             var forum = await _context.Forums.Include(f => f.Category).SingleOrDefaultAsync(f => f.ForumId == id);
+            var activeUsers =
+                await
+                    _context.Users.Where(u => u.LastActivity > DateTime.UtcNow.Subtract(new TimeSpan(0, 15, 0)))
+                        .ToListAsync();
+
             var model = new ThreadsViewModel
             {
                 PagedThreads = threads.ToPagedList(_threadsPageSize, page ?? 1),
                 Threads = threads,
+                ActiveUsers = activeUsers,
                 Forum = forum
             };
 
@@ -384,7 +393,7 @@ namespace AlterEgo.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> UpdateUserLatestReadPost(int threadId, int postId)
+        public async Task<IActionResult> UpdateUserLatestReadPost(int threadId, int postId, int forumId)
         {
             var user = await _userManager.GetUserAsync(User);
             var threadActivity = _context.ThreadActivities.SingleOrDefault(t => t.ThreadId == threadId && t.ApplicationUserId == user.Id);
@@ -397,7 +406,8 @@ namespace AlterEgo.Controllers
                     ApplicationUserId = user.Id,
                     LastRead = DateTime.UtcNow,
                     LastReadPostId = postId,
-                    ThreadId = threadId
+                    ThreadId = threadId,
+                    ForumId = forumId
                 };
 
                 _context.Add(threadActivity);
