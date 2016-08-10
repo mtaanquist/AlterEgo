@@ -28,9 +28,6 @@ namespace AlterEgo.Data
             builder.Entity<Character>()
                 .HasKey(c => new { c.Name, c.Realm });
 
-            builder.Entity<Member>()
-                .HasKey(m => new { m.CharacterName, m.CharacterRealm });
-
             builder.Entity<News>()
                 .HasKey(n => new { n.Timestamp, n.Character });
 
@@ -44,17 +41,12 @@ namespace AlterEgo.Data
             builder.Entity<ApplicationUser>()
                 .HasMany(u => u.Characters)
                 .WithOne();
-
-            builder.Entity<Member>()
-                .HasOne(m => m.Character)
-                .WithOne(c => c.Member);
         }
 
         public DbSet<Character> Characters { get; set; }
         public DbSet<Class> Classes { get; set; }
         public DbSet<Race> Races { get; set; }
         public DbSet<Guild> Guilds { get; set; }
-        public DbSet<Member> Members { get; set; }
         public DbSet<News> News { get; set; }
         public DbSet<Achievement> Achievements { get; set; }
         public DbSet<Criteria> Criteria { get; set; }

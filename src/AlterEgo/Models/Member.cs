@@ -1,5 +1,8 @@
+using System.ComponentModel.DataAnnotations.Schema;
+
 namespace AlterEgo.Models
 {
+    [NotMapped]
     public sealed class Member
     {
         public string CharacterName { get; set; }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using AlterEgo.Data;
+using AlterEgo.Filters;
 using AlterEgo.Helpers;
 using AlterEgo.Models;
 using AlterEgo.Models.ForumViewModels;
@@ -15,6 +16,7 @@ using Sakura.AspNetCore;
 namespace AlterEgo.Controllers
 {
     [Authorize]
+    [ServiceFilter(typeof(GuildAccessServiceFilter))]
     public class ForumController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -67,7 +69,7 @@ namespace AlterEgo.Controllers
 
             var activeUsers = await _context.Users.Where(u => u.LastActivity > DateTime.UtcNow.Subtract(new TimeSpan(0, 15, 0))).ToListAsync();
             var totalThreads = _context.Threads.Count(t => !t.IsDeleted);
-            var totalPosts = _context.Posts.Count(p => !p.IsDeleted) - totalThreads;
+            var totalPosts = _context.Posts.Count(p => !p.IsDeleted && !p.IsFirstPost);
             var totalMembers = _context.Users.Count();
 
             var threadActivities = _context.ThreadActivities.Where(t => t.ApplicationUserId == user.Id).ToList();

@@ -8,7 +8,7 @@ namespace AlterEgo.Models
         public string Name { get; set; }
         public string Guild { get; set; }
         public string GuildRealm { get; set; }
-        public int GuildRank { get; set; }
+        public GuildRank GuildRank { get; set; } = GuildRank.Everyone;
 
         public string Realm { get; set; }
         public string Battlegroup { get; set; }
@@ -26,22 +26,26 @@ namespace AlterEgo.Models
 
         public string UserId { get; set; }
         public ApplicationUser User { get; set; }
-        public Member Member { get; set; }
         public long LastModified { get; set; }
+
+        protected bool Equals(Character other)
+        {
+            return string.Equals(Name, other.Name) && string.Equals(Realm, other.Realm);
+        }
 
         public override bool Equals(object obj)
         {
-            if (obj == null || obj.GetType() != typeof(Character)) return false;
-
-            var other = (Character)obj;
-            return (this.Name == other.Name && this.Name == other.Realm);
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != this.GetType()) return false;
+            return Equals((Character) obj);
         }
 
         public override int GetHashCode()
         {
             unchecked
             {
-                return ((Name?.GetHashCode() ?? 0) * 397) ^ (Realm?.GetHashCode() ?? 0);
+                return ((Name != null ? Name.GetHashCode() : 0)*397) ^ (Realm != null ? Realm.GetHashCode() : 0);
             }
         }
     }

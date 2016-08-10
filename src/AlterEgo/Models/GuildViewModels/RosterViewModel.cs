@@ -8,6 +8,6 @@ namespace AlterEgo.Models.GuildViewModels
 {
     public class RosterViewModel
     {
-        public List<Member> Members { get; set; }
+        public List<Character> Characters { get; set; }
     }
 }

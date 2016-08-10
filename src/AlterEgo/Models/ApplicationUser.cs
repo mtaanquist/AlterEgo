@@ -22,6 +22,9 @@ namespace AlterEgo.Models
         public DateTime LastActivity { get; set; }
         public List<ThreadActivity> ThreadActivities { get; set; }
 
+        // API Update Details
+        public DateTime LastApiQuery { get; set; }
+
         // Permission helpers, not mapped
         [NotMapped]
         public bool IsModerator => (Rank <= (int)GuildRank.ForumAdmin);

@@ -16,7 +16,7 @@
             <div class="header-title">
                 <h3>Roster</h3>
                 <small>
-                    Displaying all @Model.Members.Count members of Alter Ego.
+                    Displaying all @Model.Characters.Count members of Alter Ego.
                 </small>
             </div>
         </div>
@@ -38,17 +38,19 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach (var member in Model.Members.OrderBy(x => x.Rank).ThenBy(x => x.CharacterName))
-            {
-                    var rank = (GuildRank)member.Rank;
-                var normalizedClassName = $"class-{member.Character.CharacterClass.Name.Replace(' ', '-').ToLower()}";
+                @foreach (var character in Model.Characters)
+                {
+                    var rank = character.GuildRank;
+                    var normalizedClassName = $"class-{character.CharacterClass.Name.Replace(' ', '-').ToLower()}";
                     <tr>
-                        <td class="@normalizedClassName">@member.Character.Name</td>
-                        <td class="text-center"><img src="@Html.Raw($"/images/wow/icons/race_{member.Character.Race}_{member.Character.Gender}.jpg")" alt="@member.Character.CharacterRace.Name" class="img-race img-rounded" /></td>
-                        <td class="text-center"><img src="@Html.Raw($"/images/wow/icons/class_{member.Character.Class}.jpg")" alt="@member.Character.CharacterClass.Name" class="img-class img-rounded" /></td>
-                        <td class="text-center">@member.Character.Level</td>
-                        <td class="text-center">@rank</td>
-                        <td class="text-center">@member.Character.AchievementPoints</td>
+                        <td>
+                            <span class="@normalizedClassName">@character.Name</span>
+                        </td>
+                        <td class="text-center"><img src="@Html.Raw($"/images/wow/icons/race_{character.Race}_{character.Gender}.jpg")" alt="@character.CharacterRace.Name" class="img-race img-rounded" /></td>
+                        <td class="text-center"><img src="@Html.Raw($"/images/wow/icons/class_{character.Class}.jpg")" alt="@character.CharacterClass.Name" class="img-class img-rounded" /></td>
+                        <td class="text-center">@character.Level</td>
+                        <td class="text-center">@Enum.GetName(typeof(GuildRank), rank)</td>
+                        <td class="text-center">@character.AchievementPoints</td>
                     </tr>
                 }
             </tbody>

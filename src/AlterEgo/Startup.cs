@@ -9,6 +9,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using AlterEgo.Data;
+using AlterEgo.Filters;
 using AlterEgo.Models;
 using AlterEgo.Services;
 using AspNet.Security.OAuth.BattleNet;
@@ -46,6 +47,13 @@ namespace AlterEgo
                         "aáàäbcdeéèfghiíìjklmnoóòöpqrstuüvwxyzæøåAÁÀÄBCDEÉÈFGHIÍÌJKLMNOÓÒÖPQRSTUÜVWXYÆØÅZ0123456789#";
                     options.Cookies.ApplicationCookie.LoginPath = "/account/login/";
                     options.Cookies.ApplicationCookie.ReturnUrlParameter = "returnUrl";
+
+                    // Password rulees
+                    options.Password.RequireDigit = false;
+                    options.Password.RequireLowercase = false;
+                    options.Password.RequireNonAlphanumeric = false;
+                    options.Password.RequireUppercase = false;
+                    options.Password.RequiredLength = 8;
                 })
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddDefaultTokenProviders();
@@ -66,6 +74,9 @@ namespace AlterEgo
 
             // Add scoped services
             services.AddScoped<BattleNetApi>();
+
+            // Add singletons
+            services.AddSingleton<GuildAccessServiceFilter>();
 
             // Add application services.
             services.AddTransient<IEmailSender, AuthMessageSender>();
@@ -101,10 +112,11 @@ namespace AlterEgo
             app.UseRequestLocalization(options);
 
             loggerFactory.AddConsole(Configuration.GetSection("Logging"));
-            loggerFactory.AddDebug();
 
             if (env.IsDevelopment())
             {
+                loggerFactory.AddDebug();
+
                 app.UseDeveloperExceptionPage();
                 app.UseDatabaseErrorPage();
                 app.UseBrowserLink();

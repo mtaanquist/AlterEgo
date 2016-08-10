@@ -42,7 +42,7 @@ namespace AlterEgo.Controllers
 
             await users.ForEachAsync(async user =>
             {
-                var hasValidToken = await _battleNetApi.IsAccessTokenValid(user.AccessToken);
+                var hasValidToken = await BattleNetApi.CheckToken(user.AccessToken);
                 if (!hasValidToken)
                 {
                     user.AccessToken = string.Empty;
@@ -75,6 +75,16 @@ namespace AlterEgo.Controllers
 
         [Route("[action]")]
         [HttpGet]
+        public async Task<IActionResult> UpdateSingleUserCharacters()
+        {
+            var user = await _userManager.FindByNameAsync("Karantor#2228");
+            await _battleNetApi.GetUserCharactersAsync(user);
+
+            return Ok();
+        }
+
+        [Route("[action]")]
+        [HttpGet]
         public async Task<IActionResult> UpdateUserCharacters()
         {
             await _battleNetApi.UpdateAllUserCharactersAsync();
@@ -95,6 +105,17 @@ namespace AlterEgo.Controllers
         [HttpGet]
         public async Task<IActionResult> UpdateGuildRanks()
         {
+            await _battleNetApi.UpdateGuildRanksAsync();
+
+            return Ok();
+        }
+
+        [Route("[action]")]
+        [HttpGet]
+        public async Task<IActionResult> UpdateGuildAccess()
+        {
+            await _battleNetApi.UpdateAllUserCharactersAsync();
+            await _battleNetApi.UpdateGuildRosterAsync();
             await _battleNetApi.UpdateGuildRanksAsync();
 
             return Ok();

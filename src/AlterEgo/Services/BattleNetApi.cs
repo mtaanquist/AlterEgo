@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Text;
 using System.Threading.Tasks;
 using AlterEgo.Data;
 using AlterEgo.Helpers;
@@ -12,7 +13,6 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace AlterEgo.Services
@@ -27,7 +27,8 @@ namespace AlterEgo.Services
         private readonly IOptions<BattleNetOptions> _options;
         private readonly ILogger _logger;
 
-        public BattleNetApi(ApplicationDbContext context, UserManager<ApplicationUser> userManager, IOptions<BattleNetOptions> options, ILoggerFactory loggerFactory)
+        public BattleNetApi(ApplicationDbContext context, UserManager<ApplicationUser> userManager,
+            IOptions<BattleNetOptions> options, ILoggerFactory loggerFactory)
         {
             _context = context;
             _userManager = userManager;
@@ -41,7 +42,7 @@ namespace AlterEgo.Services
         {
             var requestUrl =
                 $"wow/{parameters["apiType"]}/{parameters["realm"]}/{parameters["name"]}?fields={parameters["fields"]}&locale={Locale}&apikey={_options.Value.ClientId}";
-            string result = "";
+            var result = "";
 
             using (var client = new HttpClient())
             {
@@ -57,45 +58,37 @@ namespace AlterEgo.Services
             return result;
         }
 
-        public async Task<bool> IsAccessTokenValid(string accessToken)
+        private async Task<List<Character>> GetUserCharactersAsync(string accessToken)
         {
-            var requestUrl = $"https://eu.battle.net/oauth/check_token?token={accessToken}";
-            var result = false;
+            const string apiUrl = "wow/user/characters";
+            List<Character> result = null;
 
             using (var client = new HttpClient())
             {
+                var credentials = Encoding.ASCII.GetBytes($"{_options.Value.ClientId}:{_options.Value.ClientSecret}");
+                var values = new Dictionary<string, string> { { "access_token", accessToken } };
+                var content = new FormUrlEncodedContent(values);
+
+                var requestUri = new Uri($"{Host}{apiUrl}");
+
                 client.BaseAddress = new Uri(Host);
                 client.DefaultRequestHeaders.Accept.Clear();
                 client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic",
+                    Convert.ToBase64String(credentials));
 
-                var response = await client.GetAsync(requestUrl);
-
-                result = (response.StatusCode != HttpStatusCode.BadRequest);
-            }
-
-            return result;
-        }
-
-        public async Task<List<Character>> GetUserCharacters(string accessToken)
-        {
-            var requestUrl =
-                $"{Host}wow/user/characters" +
-                    $"?client_id={_options.Value.ClientId}" +
-                    $"&client_secret={_options.Value.ClientSecret}" +
-                    $"&access_token={accessToken}";
-            dynamic result = null;
-
-            using (var client = new HttpClient())
-            {
-                client.BaseAddress = new Uri(Host);
-                client.DefaultRequestHeaders.Accept.Clear();
-                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-
-                var response = await client.GetAsync(requestUrl);
+                var response = await client.PostAsync(requestUri, content);
                 if (response.IsSuccessStatusCode)
                 {
                     var responseString = await response.Content.ReadAsStringAsync();
                     result = JObject.Parse(responseString).SelectToken("characters").ToObject<List<Character>>();
+
+                    _logger.LogInformation(100, $"Retrieved {result.Count} characters for access token '{accessToken}'");
+                }
+                else
+                {
+                    _logger.LogError(100,
+                        $"Failed to retrieve characters for access token '{accessToken}' - Result: {response.StatusCode}");
                 }
             }
 
@@ -173,7 +166,7 @@ namespace AlterEgo.Services
             return null;
         }
 
-        public async Task<List<Member>> GetGuildRoster(string realm, string guildName)
+        private async Task<List<Member>> GetGuildRosterAsync(string realm, string guildName)
         {
             var parameters = new Dictionary<string, string>
             {
@@ -194,158 +187,128 @@ namespace AlterEgo.Services
 
         #region BattleNet Helpers
 
-        public async Task UpdateUserCharactersAsync(ApplicationUser user)
+        public async Task GetUserCharactersAsync(ApplicationUser user)
         {
-            var storedCharacters = _context.Characters.AsNoTracking().ToList();
-            var characters = new List<Character>();
+            // First, we check if the user's token is still valid.
+            var isUserAccessTokenValid = !string.IsNullOrEmpty(user.AccessToken) &&
+                                         user.AccessTokenExpiry > DateTime.UtcNow &&
+                                         await CheckToken(user.AccessToken);
 
-            if (!string.IsNullOrEmpty(user.AccessToken))
+            if (!isUserAccessTokenValid)
             {
-                var userCharacters = await GetUserCharacters(user.AccessToken);
+                // Token isn't valid, so remove it from the database, which will log the user out
+                user.AccessToken = "";
+                user.AccessTokenExpiry = DateTime.MinValue;
+                await _userManager.UpdateAsync(user);
 
-                if (userCharacters != null)
-                {
-                    userCharacters.ForEach(c =>
-                    {
-                        c.User = user;
-                        c.UserId = user.Id;
-                        c.CharacterRace = _context.Races.SingleOrDefault(r => r.Id == c.Race);
-                        c.CharacterClass = _context.Classes.SingleOrDefault(cl => cl.Id == c.Class);
-                    });
-                    characters.AddRange(userCharacters);
-                }
+                _logger.LogWarning((int)BattleNetEvents.GetUserCharacters,
+                    $"Could not retrieve characters for user {user.UserName} as their access token is no longer valid.");
+                return;
             }
 
-            // Add, update or delete characters in the stored list
-            var newCharacters =
-                characters.Where(c => !storedCharacters.Any(x => c.Name == x.Name && c.Realm == x.Realm))
-                    .ToList();
-            _context.AddRange(newCharacters);
+            var races = await _context.Races.ToListAsync();
+            var classes = await _context.Classes.ToListAsync();
+            var userCharacters = await GetUserCharactersAsync(user.AccessToken);
 
-            var removedCharacters =
-                storedCharacters.Where(c => !characters.Any(x => c.Name == x.Name && c.Realm == x.Realm))
-                    .ToList();
-            removedCharacters.RemoveAll(c => c.UserId == null);
-            _context.RemoveRange(removedCharacters);
+            if (userCharacters == null || !userCharacters.Any())
+            {
+                _logger.LogError((int)BattleNetEvents.GetUserCharacters,
+                    $"An error occurred attempting to retrieve {user.UserName}'s characters.");
+                return;
+            }
 
-            var changedCharacters =
-                characters.Where(c => storedCharacters.Any(x => c.Name == x.Name && c.Realm == x.Realm))
-                    .ToList();
-            changedCharacters.RemoveAll(c => c.UserId == null);
-            _context.UpdateRange(changedCharacters);
+            userCharacters.ForEach(character =>
+            {
+                character.UserId = user.Id;
+                character.User = user;
 
+                character.CharacterClass = classes.Single(c => c.Id == character.Class);
+                character.CharacterRace = races.Single(race => race.Id == character.Race);
+
+                if (_context.Characters.Contains(character))
+                {
+                    _context.Characters.Update(character);
+                }
+                else
+                {
+                    character.GuildRank = GuildRank.Everyone;
+                    _context.Characters.Add(character);
+                }
+            });
+
+            var storedUserCharacters =
+                await _context.Characters.Where(character => character.UserId == user.Id).ToListAsync();
+
+            storedUserCharacters.ForEach(character =>
+            {
+                if (!userCharacters.Contains(character))
+                {
+                    _context.Characters.Remove(character);
+                }
+            });
+
+            user.LastApiQuery = DateTime.UtcNow;
+            await _userManager.UpdateAsync(user);
             await _context.SaveChangesAsync();
         }
 
         public async Task UpdateAllUserCharactersAsync()
         {
             var users = _context.Users.ToList();
-            var storedCharacters = _context.Characters.AsNoTracking().ToList();
-
-            var characters = new List<Character>();
             await users.ForEachAsync(async user =>
             {
-                if (!string.IsNullOrEmpty(user.AccessToken))
-                {
-                    var userCharacters = await GetUserCharacters(user.AccessToken);
-
-                    if (userCharacters != null)
-                    {
-                        userCharacters.ForEach(c =>
-                        {
-                            c.User = user;
-                            c.UserId = user.Id;
-                            c.CharacterRace = _context.Races.SingleOrDefault(r => r.Id == c.Race);
-                            c.CharacterClass = _context.Classes.SingleOrDefault(cl => cl.Id == c.Class);
-                        });
-                        characters.AddRange(userCharacters);
-                    }
-                }
+                await GetUserCharactersAsync(user);
             });
 
-            // Add, update or delete characters in the stored list
-            var newCharacters =
-                characters.Where(c => !storedCharacters.Any(x => c.Name == x.Name && c.Realm == x.Realm))
-                    .ToList();
-            _context.AddRange(newCharacters);
-
-            var removedCharacters =
-                storedCharacters.Where(c => !characters.Any(x => c.Name == x.Name && c.Realm == x.Realm))
-                    .ToList();
-            removedCharacters.RemoveAll(c => c.UserId == null);
-            _context.RemoveRange(removedCharacters);
-
-            var changedCharacters =
-                characters.Where(c => storedCharacters.Any(x => c.Name == x.Name && c.Realm == x.Realm))
-                    .ToList();
-            changedCharacters.RemoveAll(c => c.UserId == null);
-            _context.UpdateRange(changedCharacters);
-
-            await _context.SaveChangesAsync();
         }
 
         public async Task UpdateGuildRosterAsync()
         {
-            var roster = await GetGuildRoster(_options.Value.GuildRealm, _options.Value.GuildName);
-            if (roster == null) return;
+            var races = await _context.Races.ToListAsync();
+            var classes = await _context.Classes.ToListAsync();
 
-            var characters = new List<Character>();
-            roster.ForEach(member => characters.Add(member.Character));
+            var guildCharacters = new List<Character>();
+            var members = await GetGuildRosterAsync(_options.Value.GuildRealm, _options.Value.GuildName);
 
-            characters.ForEach(c =>
+            if (members == null || !members.Any())
             {
-                c.CharacterRace = _context.Races.SingleOrDefault(r => r.Id == c.Race);
-                c.CharacterClass = _context.Classes.SingleOrDefault(cl => cl.Id == c.Class);
-            });
+                _logger.LogError((int)BattleNetEvents.GetUserCharacters,
+                    $"An error occurred attempting to retrieve the guild roster.");
+                return;
+            }
 
-            var storedCharacters = _context.Characters.ToList();
-
-            // Add, update or delete characters in the stored list
-            var newCharacters =
-                characters.Where(c => !storedCharacters.Any(x => c.Name == x.Name && c.Realm == x.Realm))
-                    .ToList();
-            _context.AddRange(newCharacters);
-
-            var removedCharacters =
-                storedCharacters.Where(c => !characters.Any(x => c.Name == x.Name && c.Realm == x.Realm))
-                    .ToList();
-            removedCharacters.RemoveAll(c => c.UserId != null);
-            _context.RemoveRange(removedCharacters);
-
-            await _context.SaveChangesAsync();
-
-            // Update the Member table
-            var members = new List<Member>();
-            await roster.ForEachAsync(async r =>
+            members.ForEach(member =>
             {
-                var member = new Member
+                guildCharacters.Add(member.Character);
+
+                if (!_context.Characters.Contains(member.Character))
                 {
-                    Character = await _context.Characters.SingleOrDefaultAsync(c => c.Name == r.Character.Name && c.Realm == r.Character.Realm),
-                    CharacterName = r.Character.Name,
-                    CharacterRealm = r.Character.Realm,
-                    Rank = r.Rank
-                };
+                    var character = member.Character;
+                    character.CharacterClass = classes.Single(c => c.Id == character.Class);
+                    character.CharacterRace = races.Single(race => race.Id == character.Race);
+                    character.GuildRank = (GuildRank)member.Rank;
 
-                members.Add(member);
+                    _context.Characters.Add(member.Character);
+                }
+                else
+                {
+                    var character = _context.Characters.Single(c => c.Equals(member.Character));
+                    character.GuildRank = (GuildRank)member.Rank;
+
+                    _context.Characters.Update(character);
+                }
             });
 
-            var storedMembers = await _context.Members.Include(m => m.Character).AsNoTracking().ToListAsync();
+            var storedCharacters =
+                await _context.Characters.Where(character => string.IsNullOrEmpty(character.UserId)).ToListAsync();
+            storedCharacters.ForEach(character =>
+            {
+                if (!guildCharacters.Contains(character))
+                {
+                    _context.Characters.Remove(character);
+                }
+            });
 
-            // Add, update or delete members in the stored list
-            var newMembers =
-                members.Where(c => !storedMembers.Any(x => c.CharacterName == x.CharacterName && c.CharacterRealm == x.CharacterRealm))
-                    .ToList();
-            _context.AddRange(newMembers);
-
-            var removedMembers =
-                storedMembers.Where(c => !members.Any(x => c.CharacterName == x.CharacterName && c.CharacterRealm == x.CharacterRealm))
-                    .ToList();
-            _context.RemoveRange(removedMembers);
-
-            var changedMembers =
-                members.Where(c => storedMembers.Any(x => c.CharacterName == x.CharacterName && c.CharacterRealm == x.CharacterRealm))
-                    .ToList();
-            _context.UpdateRange(changedMembers);
             await _context.SaveChangesAsync();
         }
 
@@ -355,22 +318,66 @@ namespace AlterEgo.Services
             var users = await _context.Users.ToListAsync();
             users.ForEach(user =>
             {
-                var currentRank = (int)GuildRank.Everyone;
-                var characters = _context.Characters.Where(c => c.User == user && c.Realm == _options.Value.GuildRealm && c.Guild == _options.Value.GuildName).ToList();
-                characters.ForEach(character =>
-                {
-                    var member = _context.Members.SingleOrDefault(m => m.CharacterName == character.Name && m.CharacterRealm == character.Realm);
-                    if (member != null)
-                        currentRank = (member.Rank < currentRank) ? member.Rank : currentRank;
-                });
+                var newRank = (int)GuildRank.Everyone;
+                var characters =
+                    _context.Characters.Where(
+                        character =>
+                            character.UserId == user.Id && character.Realm == _options.Value.GuildRealm &&
+                            character.Guild == _options.Value.GuildName).ToList();
 
-                user.Rank = currentRank;
+                if (characters != null && characters.Any())
+                {
+                    newRank = (int)characters.Min(x => x.GuildRank);
+                }
+
+                user.Rank = newRank;
             });
 
-            _context.UpdateRange(users);
+            _context.Users.UpdateRange(users);
             await _context.SaveChangesAsync();
         }
 
         #endregion
+
+        #region Private Functions
+
+        public static async Task<bool> CheckToken(string accessToken)
+        {
+            var requestUrl = $"https://eu.battle.net/oauth/check_token?token={accessToken}";
+            bool result;
+
+            using (var client = new HttpClient())
+            {
+                client.BaseAddress = new Uri(Host);
+                client.DefaultRequestHeaders.Accept.Clear();
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+
+                var response = await client.GetAsync(requestUrl);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var responseString = await response.Content.ReadAsStringAsync();
+                    var obj = JObject.Parse(responseString);
+
+                    result = (obj.Property("scope") != null);
+                }
+                else
+                {
+                    result = (response.StatusCode == HttpStatusCode.BadRequest);
+                }
+            }
+
+            return result;
+        }
+
+        #endregion
+    }
+
+    public enum BattleNetEvents
+    {
+        GetUserCharacters = 100,
+        GetGuildNews = 101,
+        GetGuildRoster = 102,
+        UpdateUserRanks = 103
     }
 }

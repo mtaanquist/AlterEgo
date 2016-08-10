@@ -101,13 +101,12 @@
       "Views",
       "Areas/**/Views",
       "project.json",
-      "appsettings.json",
+      "appsettings.Production.json",
       "web.config"
     ]
   },
 
   "scripts": {
-    "prepublish": [ "bower install", "dotnet bundle" ],
-    "postpublish": [ "dotnet publish-iis --publish-folder %publish:OutputPath% --framework %publish:FullTargetFramework%" ]
+    "prepublish": [ "bower install", "dotnet bundle" ]
   }
 }

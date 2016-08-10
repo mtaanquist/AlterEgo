@@ -250,7 +250,7 @@ namespace AlterEgo.Controllers
                     if (result.Succeeded)
                     {
                         // Update user's rank
-                        await _battleNetApi.UpdateUserCharactersAsync(user);
+                        await _battleNetApi.GetUserCharactersAsync(user);
                         await _battleNetApi.UpdateGuildRosterAsync();
                         await _battleNetApi.UpdateGuildRanksAsync();
 

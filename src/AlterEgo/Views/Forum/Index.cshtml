@@ -54,10 +54,10 @@
 
                                 foreach (var thread in forum.Threads)
                                 {
-                                    var latestPost = thread.Posts.OrderByDescending(post => post.PostedAt).Where(post => !post.IsDeleted).First();
+                                    var latestPost = thread.Posts.OrderByDescending(post => post.PostedAt).First(post => !post.IsDeleted);
                                     var activity = activities.SingleOrDefault(t => t.ThreadId == thread.ThreadId);
 
-                                    hasNewPosts = activity != null && !hasNewPosts ? latestPost.PostId > activity.LastReadPostId : true;
+                                    hasNewPosts = activity == null || hasNewPosts || latestPost.PostId > activity.LastReadPostId;
                                 }
 
                                 if (hasNewPosts)
@@ -73,13 +73,13 @@
                         </div>
                         <div class="header-title">
                             <h4><a asp-controller="Forum" asp-action="Threads" asp-route-id="@forum.ForumId">@forum.Name</a></h4>
-                            <small>@forum.Description</small>
+                            <p>@forum.Description</p>
                         </div>
                         <hr />
                     </div>
-                                }
+                }
             </div>
-                                }
+        }
     </div>
 </div>
 
@@ -89,17 +89,17 @@
     </div>
 </div>
 
-@if (Model.ActiveUsers.Count() > 0)
+@if (Model.ActiveUsers.Any())
 {
     <br />
     <div class="panel panel-filled">
         @if (Model.ActiveUsers.Count() == 1)
         {
-            <div class="panel-heading">@Model.ActiveUsers.Count() user is online (in the past 15 minutes)</div>
+            <div class="panel-heading">@Model.ActiveUsers.Count user is online (in the past 15 minutes)</div>
         }
         else
         {
-            <div class="panel-heading">@Model.ActiveUsers.Count() users are online (in the past 15 minutes)</div>
+            <div class="panel-heading">@Model.ActiveUsers.Count users are online (in the past 15 minutes)</div>
         }
         <div class="panel-body">
             <small>
