@@ -206,9 +206,12 @@ namespace AlterEgo.Services
                 return;
             }
 
+            user.LastApiQuery = DateTime.UtcNow;
+            await _userManager.UpdateAsync(user);
+
             var races = await _context.Races.ToListAsync();
             var classes = await _context.Classes.ToListAsync();
-            var userCharacters = await GetUserCharactersAsync(user.AccessToken);
+            var userCharacters = await GetUserCharactersAsync(user.AccessToken); // Bnet api Invocation
 
             if (userCharacters == null || !userCharacters.Any())
             {
@@ -247,8 +250,7 @@ namespace AlterEgo.Services
                 }
             });
 
-            user.LastApiQuery = DateTime.UtcNow;
-            await _userManager.UpdateAsync(user);
+
             await _context.SaveChangesAsync();
         }
 

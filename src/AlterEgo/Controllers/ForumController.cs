@@ -67,7 +67,10 @@ namespace AlterEgo.Controllers
                 latestPosts.Add(f.ForumId, latestPost);
             }));
 
-            var activeUsers = await _context.Users.Where(u => u.LastActivity > DateTime.UtcNow.Subtract(new TimeSpan(0, 15, 0))).ToListAsync();
+            var activeUsers =
+                await
+                    _context.Users.Where(u => u.LastActivity > DateTime.UtcNow.Subtract(new TimeSpan(0, 15, 0)))
+                        .ToListAsync();
             var totalThreads = _context.Threads.Count(t => !t.IsDeleted);
             var totalPosts = _context.Posts.Count(p => !p.IsDeleted && !p.IsFirstPost);
             var totalMembers = _context.Users.Count();
@@ -571,7 +574,8 @@ namespace AlterEgo.Controllers
         private async Task<int> GetLatestPostIdAsync(int threadId)
         {
             var user = await _userManager.GetUserAsync(User);
-            var threadActivity = _context.ThreadActivities.SingleOrDefault(t => t.ThreadId == threadId && t.ApplicationUserId == user.Id);
+            var threadActivity =
+                _context.ThreadActivities.SingleOrDefault(t => t.ThreadId == threadId && t.ApplicationUserId == user.Id);
 
             if (threadActivity == null || threadActivity.LastReadPostId == 0)
             {

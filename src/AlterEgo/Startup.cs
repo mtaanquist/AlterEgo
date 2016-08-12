@@ -73,7 +73,7 @@ namespace AlterEgo
             services.Configure<BattleNetOptions>(Configuration.GetSection("BattleNet"));
 
             // Add scoped services
-            services.AddScoped<BattleNetApi>();
+            services.AddTransient<BattleNetApi>();
 
             // Add singletons
             services.AddSingleton<GuildAccessServiceFilter>();

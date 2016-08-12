@@ -2,7 +2,6 @@
 /// <reference path="js/forum.js" />
 /// <reference path="js/pace.min.js" />
 /// <reference path="js/power.js" />
-/// <reference path="js/simplemde/codemirror/tablist.js" />
 /// <reference path="js/simplemde/simplemde.min.js" />
 /// <reference path="js/site.js" />
 /// <reference path="lib/bootstrap/dist/js/bootstrap.js" />

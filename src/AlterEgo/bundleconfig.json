@@ -80,5 +80,17 @@
     "inputFiles": [
       "wwwroot/lib/jquery_appear/jquery.appear.js"
     ]
+  },
+  {
+    "outputFileName": "wwwroot/lib/simplemde/src/js/simplemde.min.js",
+    "inputFiles": [
+      "wwwroot/lib/simplemde/src/js/simplemde.js"
+    ]
+  },
+  {
+    "outputFileName": "wwwroot/lib/jquery/dist/jquery.min.js",
+    "inputFiles": [
+      "wwwroot/lib/jquery/dist/jquery.js"
+    ]
   }
 ]
