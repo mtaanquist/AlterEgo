@@ -71,12 +71,11 @@ namespace AlterEgo
             });
 
             services.Configure<BattleNetOptions>(Configuration.GetSection("BattleNet"));
+            services.Configure<EmailOptions>(Configuration.GetSection("Email"));
 
             // Add scoped services
-            services.AddTransient<BattleNetApi>();
-
-            // Add singletons
-            services.AddSingleton<GuildAccessServiceFilter>();
+            services.AddScoped<BattleNetApi>();
+            services.AddScoped<GuildAccessServiceFilter>();
 
             // Add application services.
             services.AddTransient<IEmailSender, AuthMessageSender>();

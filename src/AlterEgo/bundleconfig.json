@@ -92,5 +92,11 @@
     "inputFiles": [
       "wwwroot/lib/jquery/dist/jquery.js"
     ]
+  },
+  {
+    "outputFileName": "wwwroot/js/manage.min.js",
+    "inputFiles": [
+      "wwwroot/js/manage.js"
+    ]
   }
 ]

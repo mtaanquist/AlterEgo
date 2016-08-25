@@ -179,7 +179,10 @@ namespace AlterEgo.Controllers
 
             var thread =
                 await
-                    _context.Threads.Include(t => t.Author)
+                    _context.Threads
+                        .Include(t => t.Author)
+                            .ThenInclude(u => u.MainCharacter)
+                                .ThenInclude(c => c.CharacterClass)
                         .Include(t => t.Forum).ThenInclude(f => f.Category)
                         .Include(t => t.Posts)
                         .ThenInclude(p => p.Author)
@@ -187,6 +190,8 @@ namespace AlterEgo.Controllers
 
             var posts = await _context.Posts
                 .Include(post => post.Author)
+                    .ThenInclude(author => author.MainCharacter)
+                        .ThenInclude(c => c.CharacterClass)
                 .Include(post => post.Editor)
                 .Where(post => post.ThreadId == id && !post.IsDeleted)
                 .OrderBy(post => post.PostId)
@@ -619,7 +624,7 @@ namespace AlterEgo.Controllers
                     ApplicationUserId = user.Id,
                     ApplicationUser = user,
                     LastRead = DateTime.UtcNow,
-                    LastReadPostId = _context.Posts.Single(p => p.IsFirstPost && p.ThreadId == threadId).PostId,
+                    LastReadPostId = _context.Posts.First(p => p.IsFirstPost && p.ThreadId == threadId).PostId,
                     ThreadId = threadId
                 };
 

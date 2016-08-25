@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using AlterEgo.Models;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 
 namespace AlterEgo.Data
 {
@@ -37,10 +38,6 @@ namespace AlterEgo.Data
                 .WithOne(n => n.Guild)
                 .HasForeignKey(n => new { n.GuildName, n.GuildRealm })
                 .HasPrincipalKey(g => new { g.Name, g.Realm });
-
-            builder.Entity<ApplicationUser>()
-                .HasMany(u => u.Characters)
-                .WithOne();
         }
 
         public DbSet<Character> Characters { get; set; }

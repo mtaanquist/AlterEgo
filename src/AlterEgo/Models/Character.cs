@@ -28,6 +28,10 @@ namespace AlterEgo.Models
         public ApplicationUser User { get; set; }
         public long LastModified { get; set; }
 
+
+        public string MainCharacterUserId { get; set; }
+        public ApplicationUser MainCharacterUser { get; set; }
+
         protected bool Equals(Character other)
         {
             return string.Equals(Name, other.Name) && string.Equals(Realm, other.Realm);

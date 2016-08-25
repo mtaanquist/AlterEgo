@@ -17,6 +17,19 @@
 
 @Html.Partial("_SearchPartial")
 
+@if (string.IsNullOrEmpty(currentUser.MainCharacterName))
+{
+    <br />
+    <div class="row">
+        <div class="col-lg-12 col-xs-12">
+            <div class="alert alert-info alert-dismissible" role="alert">
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <strong>Heads up!</strong> You currently have no main character set for your account. You can set yours in your <a href="@Url.Action("Index", "Manage")#characters">account settings</a>.
+            </div>
+        </div>
+    </div>
+}
+
 <div class="row">
     <div class="col-lg-12 col-xs-12">
         @foreach (var category in Model.Categories)

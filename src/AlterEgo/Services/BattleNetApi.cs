@@ -11,6 +11,7 @@ using AlterEgo.Helpers;
 using AlterEgo.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json.Linq;
@@ -182,7 +183,7 @@ namespace AlterEgo.Services
 
             return null;
         }
-
+         
         #endregion
 
         #region BattleNet Helpers
@@ -192,13 +193,22 @@ namespace AlterEgo.Services
             // First, we check if the user's token is still valid.
             var isUserAccessTokenValid = !string.IsNullOrEmpty(user.AccessToken) &&
                                          user.AccessTokenExpiry > DateTime.UtcNow &&
-                                         await CheckToken(user.AccessToken);
+                                         await CheckToken(user.AccessToken, user.NormalizedUserName);
 
             if (!isUserAccessTokenValid)
             {
-                // Token isn't valid, so remove it from the database, which will log the user out
-                user.AccessToken = "";
-                user.AccessTokenExpiry = DateTime.MinValue;
+                // Log it
+                _logger.LogWarning((int)BattleNetEvents.ValidateUserToken,
+                    $"User {user.NormalizedUserName} has an invalid token, and has had it removed. " +
+                    $"AccessToken = {user.AccessToken}, ExpiryDateTime = {user.AccessTokenExpiry}, Attempts = {user.FailedTokenValidations}");
+
+                if (user.FailedTokenValidations > SiteGlobals.MaxFailedTokenValidationAttempts)
+                {
+                    user.AccessToken = string.Empty;
+                    user.AccessTokenExpiry = DateTime.MinValue;
+                }
+
+                user.FailedTokenValidations++;
                 await _userManager.UpdateAsync(user);
 
                 _logger.LogWarning((int)BattleNetEvents.GetUserCharacters,
@@ -206,12 +216,13 @@ namespace AlterEgo.Services
                 return;
             }
 
-            user.LastApiQuery = DateTime.UtcNow;
-            await _userManager.UpdateAsync(user);
+            // Store his current main character, because for some reason, EF updates it to the first character
+            var mainCharacterName = user.MainCharacterName;
+            var mainCharacterRealm = user.MainCharacterRealm;
 
-            var races = await _context.Races.ToListAsync();
-            var classes = await _context.Classes.ToListAsync();
-            var userCharacters = await GetUserCharactersAsync(user.AccessToken); // Bnet api Invocation
+            var races = _context.Races.ToList();
+            var classes = _context.Classes.ToList();
+            var userCharacters = await GetUserCharactersAsync(user.AccessToken);
 
             if (userCharacters == null || !userCharacters.Any())
             {
@@ -225,38 +236,46 @@ namespace AlterEgo.Services
                 character.UserId = user.Id;
                 character.User = user;
 
-                character.CharacterClass = classes.Single(c => c.Id == character.Class);
-                character.CharacterRace = races.Single(race => race.Id == character.Race);
+                character.CharacterClass = classes.FirstOrDefault(c => c.Id == character.Class);
+                character.CharacterRace = races.FirstOrDefault(race => race.Id == character.Race);
 
                 if (_context.Characters.Contains(character))
                 {
-                    _context.Characters.Update(character);
+                    _context.Update(character);
                 }
                 else
                 {
                     character.GuildRank = GuildRank.Everyone;
-                    _context.Characters.Add(character);
+                    _context.Add(character);
                 }
             });
 
             var storedUserCharacters =
-                await _context.Characters.Where(character => character.UserId == user.Id).ToListAsync();
+                await _context.Characters.AsNoTracking().Where(character => character.UserId == user.Id).ToListAsync();
 
             storedUserCharacters.ForEach(character =>
             {
                 if (!userCharacters.Contains(character))
                 {
-                    _context.Characters.Remove(character);
+                    _context.Remove(character);
                 }
             });
 
+            // Update the user
+            user.MainCharacter =
+                _context.Characters.FirstOrDefault(
+                    character => character.Name == mainCharacterName && character.Realm == mainCharacterRealm);
+            user.MainCharacterName = mainCharacterName;
+            user.MainCharacterRealm = mainCharacterRealm;
+            user.LastApiQuery = DateTime.UtcNow;
 
-            await _context.SaveChangesAsync();
+            await _userManager.UpdateAsync(user);
+            SaveChanges();
         }
 
         public async Task UpdateAllUserCharactersAsync()
         {
-            var users = _context.Users.ToList();
+            var users = _context.Users.AsNoTracking().ToList();
             await users.ForEachAsync(async user =>
             {
                 await GetUserCharactersAsync(user);
@@ -286,15 +305,15 @@ namespace AlterEgo.Services
                 if (!_context.Characters.Contains(member.Character))
                 {
                     var character = member.Character;
-                    character.CharacterClass = classes.Single(c => c.Id == character.Class);
-                    character.CharacterRace = races.Single(race => race.Id == character.Race);
+                    character.CharacterClass = classes.First(c => c.Id == character.Class);
+                    character.CharacterRace = races.First(race => race.Id == character.Race);
                     character.GuildRank = (GuildRank)member.Rank;
 
                     _context.Characters.Add(member.Character);
                 }
                 else
                 {
-                    var character = _context.Characters.Single(c => c.Equals(member.Character));
+                    var character = _context.Characters.First(c => c.Equals(member.Character));
                     character.GuildRank = (GuildRank)member.Rank;
 
                     _context.Characters.Update(character);
@@ -302,7 +321,8 @@ namespace AlterEgo.Services
             });
 
             var storedCharacters =
-                await _context.Characters.Where(character => string.IsNullOrEmpty(character.UserId)).ToListAsync();
+                await _context.Characters.AsNoTracking().Where(character => string.IsNullOrEmpty(character.UserId)).ToListAsync();
+
             storedCharacters.ForEach(character =>
             {
                 if (!guildCharacters.Contains(character))
@@ -311,7 +331,7 @@ namespace AlterEgo.Services
                 }
             });
 
-            await _context.SaveChangesAsync();
+            SaveChanges();
         }
 
         public async Task UpdateGuildRanksAsync()
@@ -336,14 +356,14 @@ namespace AlterEgo.Services
             });
 
             _context.Users.UpdateRange(users);
-            await _context.SaveChangesAsync();
+            SaveChanges();
         }
 
         #endregion
 
         #region Private Functions
 
-        public static async Task<bool> CheckToken(string accessToken)
+        public async Task<bool> CheckToken(string accessToken, string userName)
         {
             var requestUrl = $"https://eu.battle.net/oauth/check_token?token={accessToken}";
             bool result;
@@ -365,7 +385,60 @@ namespace AlterEgo.Services
                 }
                 else
                 {
+                    _logger.LogWarning((int)BattleNetEvents.CheckToken,
+                        $"Failed checking token for {userName}. Server returned {response.StatusCode}");
                     result = (response.StatusCode == HttpStatusCode.BadRequest);
+                }
+            }
+
+            return result;
+        }
+
+        private int SaveChanges()
+        {
+            var result = -1;
+            try
+            {
+                result = _context.SaveChanges();
+            }
+            catch (DbUpdateConcurrencyException e)
+            {
+                foreach (var entry in e.Entries)
+                {
+                    var entity = entry.Entity as Character;
+                    if (entity != null)
+                    {
+                        var databaseEntity =
+                            _context.Characters.AsNoTracking()
+                                .Single(
+                                    character =>
+                                        character.Name == entity.Name &&
+                                        character.Realm == entity.Realm);
+                        var databaseEntry = _context.Entry(databaseEntity);
+
+                        foreach (var property in entry.Metadata.GetProperties())
+                        {
+                            var proposedValue = entry.Property(property.Name).CurrentValue;
+                            var originalValue = entry.Property(property.Name).OriginalValue;
+                            var databaseValue = databaseEntry.Property(property.Name).CurrentValue;
+
+                            // TODO: Logic to decide which value should be written to database
+                            entry.Property(property.Name).CurrentValue = proposedValue;
+
+                            // Update original values to 
+                            entry.Property(property.Name).OriginalValue = databaseEntry.Property(property.Name).CurrentValue;
+                        }
+                    }
+                    else
+                    {
+                        _logger.LogError((int)BattleNetEvents.GetUserCharacters,
+                            $"Don\'t know how to handle concurrency conflicts for {entry.Metadata.Name}");
+                        throw new NotSupportedException(
+                            $"Don\'t know how to handle concurrency conflicts for {entry.Metadata.Name}");
+                    }
+
+                    // Retry the save operation
+                    _context.SaveChanges();
                 }
             }
 
@@ -380,6 +453,8 @@ namespace AlterEgo.Services
         GetUserCharacters = 100,
         GetGuildNews = 101,
         GetGuildRoster = 102,
-        UpdateUserRanks = 103
+        UpdateUserRanks = 103,
+        CheckToken = 110,
+        ValidateUserToken = 111,
     }
 }

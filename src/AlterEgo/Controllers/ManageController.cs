@@ -60,36 +60,32 @@ namespace AlterEgo.Controllers
                 return View("Error");
             }
 
-            var characters = _context.Characters
+            var characters = _context.Characters.AsNoTracking()
                 .Include(character => character.CharacterClass)
                 .Include(character => character.CharacterRace)
-                .Where(character => character.User == user)
+                .Where(character => character.UserId == user.Id)
                 .ToList();
 
-            var timeZones = new List<SelectListItem>();
-            foreach (var tz in TimeZoneInfo.GetSystemTimeZones())
+            var timeZones = TimeZoneInfo.GetSystemTimeZones().Select(tz => new SelectListItem
             {
-                timeZones.Add(new SelectListItem
-                {
-                    Text = tz.Id,
-                    Value = tz.Id,
-                    Selected = user.LocalTimeZoneInfoId == tz.Id
-                });
-            }
+                Text = tz.Id, Value = tz.Id, Selected = user.LocalTimeZoneInfoId == tz.Id
+            }).ToList();
 
-            var model = new ManageIndexViewModel
+            var model = new ManageViewModel
             {
                 Characters = characters,
                 TimeZones = timeZones.OrderBy(tz => tz.Value).ToList(),
                 HasPassword = await _userManager.HasPasswordAsync(user),
+                IsEmailConfirmed = await _userManager.IsEmailConfirmedAsync(user),
                 UserAccessTokenExpiry = user.AccessTokenExpiry
             };
+
             return View(model);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> UpdateProfile(ManageIndexViewModel model)
+        public async Task<IActionResult> UpdateProfile(ManageViewModel model)
         {
             var user = await GetCurrentUserAsync();
 
@@ -167,6 +163,41 @@ namespace AlterEgo.Controllers
             return RedirectToAction(nameof(Index), new { Message = ManageMessageId.Error });
         }
 
+        //
+        // POST: /Manage/SetMainCharacter
+        [HttpPost]
+        public async Task<IActionResult> SetMainCharacter(string name, string realm)
+        {
+            var user = await GetCurrentUserAsync();
+            // If the user has an old main character, we need to remove it first
+            if (!string.IsNullOrEmpty(user.MainCharacterName))
+            {
+                user.MainCharacter = null;
+                await _userManager.UpdateAsync(user);
+
+                var oldMainCharacter =
+                    _context.Characters.FirstOrDefault(
+                        c => c.Name == user.MainCharacterName && c.Realm == user.MainCharacterRealm);
+
+                oldMainCharacter.MainCharacterUser = null;
+                oldMainCharacter.MainCharacterUserId = null;
+                _context.Update(oldMainCharacter);
+                _context.SaveChanges();
+            }
+
+            var character = _context.Characters.FirstOrDefault(c => c.Name == name && c.Realm == realm);
+
+            user.MainCharacter = character;
+            user.MainCharacterName = character.Name;
+            user.MainCharacterRealm = character.Realm;
+            var result = await _userManager.UpdateAsync(user);
+
+            if (result.Succeeded)
+                return Ok();
+
+            return BadRequest();
+        }
+
         #region Helpers
 
         private void AddErrors(IdentityResult result)
@@ -179,13 +210,8 @@ namespace AlterEgo.Controllers
 
         public enum ManageMessageId
         {
-            AddPhoneSuccess,
-            AddLoginSuccess,
             ChangePasswordSuccess,
-            SetTwoFactorSuccess,
             SetPasswordSuccess,
-            RemoveLoginSuccess,
-            RemovePhoneSuccess,
             Error
         }
 

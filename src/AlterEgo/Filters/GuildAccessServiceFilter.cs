@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using AlterEgo.Data;
 using AlterEgo.Models;
@@ -23,6 +24,8 @@ namespace AlterEgo.Filters
 
         public override async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
         {
+            await base.OnActionExecutionAsync(context, next);
+
             var user =  await _userManager.GetUserAsync(context.HttpContext.User);
 
             if (user.LastApiQuery.AddDays(1) < DateTime.UtcNow)
@@ -32,8 +35,6 @@ namespace AlterEgo.Filters
                 await _battleNetApi.UpdateGuildRosterAsync();
                 await _battleNetApi.UpdateGuildRanksAsync();
             }
-
-            await base.OnActionExecutionAsync(context, next);
         }
     }
 }

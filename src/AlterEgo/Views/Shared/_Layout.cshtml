@@ -8,30 +8,31 @@
     <title>@ViewData["Title"] - Alter Ego</title>
 
     <environment names="Development">
-        <link rel="stylesheet" href="~/lib/font-awesome/css/font-awesome.css" />
-        <link rel="stylesheet" href="~/lib/animate.css/animate.css" />
         <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.css" />
+        <link rel="stylesheet" href="~/lib/font-awesome/css/font-awesome.css"/>
+        <link rel="stylesheet" href="~/lib/animate.css/animate.css"/>
 
-        <link rel="stylesheet" href="~/css/pe-icons/pe-icon-7-stroke.css" />
-        <link rel="stylesheet" href="~/css/pe-icons/helper.css" />
-        <link rel="stylesheet" href="~/css/stroke-icons/style.css" />
-        <link rel="stylesheet" href="~/css/style.css" />
+        <link rel="stylesheet" href="~/css/pe-icons/pe-icon-7-stroke.css"/>
+        <link rel="stylesheet" href="~/css/pe-icons/helper.css"/>
+        <link rel="stylesheet" href="~/css/stroke-icons/style.css"/>
+        <link rel="stylesheet" href="~/css/style.css"/>
 
-        <link rel="stylesheet" href="~/lib/simplemde/dist/simplemde.css" />
-        <link rel="stylesheet" href="~/css/site.css" />
+        <link rel="stylesheet" href="~/lib/simplemde/dist/simplemde.css"/>
+        <link rel="stylesheet" href="~/css/site.css"/>
     </environment>
     <environment names="Staging,Production">
+        <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
         <link rel="stylesheet" href="~/lib/font-awesome/css/font-awesome.min.css"/>
-        <link rel="stylesheet" href="~/lib/animate.css/animate.min.css" />
-        <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css"/>
+        <link rel="stylesheet" href="~/lib/animate.css/animate.min.css"/>
 
-        <link rel="stylesheet" href="~/css/pe-icons/pe-icon-7-stroke.min.css" />
-        <link rel="stylesheet" href="~/css/pe-icons/helper.min.css" />
+
+        <link rel="stylesheet" href="~/css/pe-icons/pe-icon-7-stroke.min.css"/>
+        <link rel="stylesheet" href="~/css/pe-icons/helper.min.css"/>
         <link rel="stylesheet" href="~/css/stroke-icons/style.min.css"/>
         <link rel="stylesheet" href="~/css/style.min.css" asp-append-version="true"/>
 
-        <link rel="stylesheet" href="~/lib/simplemde/dist/simplemde.min.css" />
-        <link rel="stylesheet" href="~/css/site.min.css" asp-append-version="true" />
+        <link rel="stylesheet" href="~/lib/simplemde/dist/simplemde.min.css"/>
+        <link rel="stylesheet" href="~/css/site.min.css" asp-append-version="true"/>
     </environment>
 </head>
 <body>
@@ -56,8 +57,14 @@
         <script src="~/js/site.js" asp-append-version="true"></script>
     </environment>
     <environment names="Staging,Production">
-        <script src="~/lib/jquery/dist/jquery.min.js"></script>
-        <script src="~/lib/bootstrap/dist/js/bootstrap.min.js"></script>
+        <script src="https://code.jquery.com/jquery-2.2.4.min.js"
+                integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44="
+                crossorigin="anonymous">
+        </script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"
+                integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
+                crossorigin="anonymous">
+        </script>
 
         @* Further global script files (minified) should be added here *@
         <script src="~/js/pace.min.js" asp-append-version="true"></script>

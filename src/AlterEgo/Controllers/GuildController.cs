@@ -1,9 +1,7 @@
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using AlterEgo.Models.GuildViewModels;
-using AlterEgo.Services;
 using AlterEgo.Data;
 using AlterEgo.Models;
 using Microsoft.EntityFrameworkCore;
@@ -26,13 +24,16 @@ namespace AlterEgo.Controllers
         {
             var characters =
                 await
-                    _context.Characters.Include(c => c.CharacterRace)
+                    _context.Characters
+                        .AsNoTracking()
+                        .Include(c => c.CharacterRace)
                         .Include(c => c.CharacterClass)
                         .Include(c => c.User)
                         .Where(
                             character =>
                                 character.Guild == _options.Value.GuildName &&
-                                character.Realm == _options.Value.GuildRealm)
+                                character.Realm == _options.Value.GuildRealm &&
+                                character.GuildRank != GuildRank.Everyone)
                         .OrderBy(character => character.GuildRank)
                         .ThenBy(character => character.Name)
                         .ToListAsync();

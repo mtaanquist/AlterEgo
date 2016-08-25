@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace AlterEgo.Controllers
@@ -25,28 +26,44 @@ namespace AlterEgo.Controllers
         private readonly BattleNetApi _battleNetApi;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IOptions<BattleNetOptions> _options;
+        private readonly ILogger _logger;
 
-        public BattleNetController(ApplicationDbContext context, BattleNetApi battleNetApi, UserManager<ApplicationUser> userManager, IOptions<BattleNetOptions> options)
+        public BattleNetController(ApplicationDbContext context, BattleNetApi battleNetApi,
+            UserManager<ApplicationUser> userManager, IOptions<BattleNetOptions> options, ILoggerFactory loggerFactory)
         {
             _context = context;
             _battleNetApi = battleNetApi;
             _userManager = userManager;
             _options = options;
+            _logger = loggerFactory.CreateLogger<BattleNetController>();
         }
 
         [Route("[action]")]
         [HttpGet]
         public async Task<IActionResult> ValidateAccessTokens()
         {
-            var users = await _context.Users.ToListAsync();
+            var users = await _context.Users.Where(u => !string.IsNullOrEmpty(u.AccessToken)).ToListAsync();
 
             await users.ForEachAsync(async user =>
             {
-                var hasValidToken = await BattleNetApi.CheckToken(user.AccessToken);
-                if (!hasValidToken)
+                var isUserAccessTokenValid = !string.IsNullOrEmpty(user.AccessToken) &&
+                                             user.AccessTokenExpiry > DateTime.UtcNow &&
+                                             await _battleNetApi.CheckToken(user.AccessToken, user.NormalizedUserName);
+
+                if (!isUserAccessTokenValid)
                 {
-                    user.AccessToken = string.Empty;
-                    user.AccessTokenExpiry = DateTime.MinValue;
+                    // Log it
+                    _logger.LogWarning((int) BattleNetEvents.ValidateUserToken,
+                        $"User {user.NormalizedUserName} has an invalid token, and has had it removed. " +
+                        $"AccessToken = {user.AccessToken}, ExpiryDateTime = {user.AccessTokenExpiry}, Attempts = {user.FailedTokenValidations}");
+
+                    if (user.FailedTokenValidations > SiteGlobals.MaxFailedTokenValidationAttempts)
+                    {
+                        user.AccessToken = string.Empty;
+                        user.AccessTokenExpiry = DateTime.MinValue;
+                    }
+
+                    user.FailedTokenValidations++;
                     await _userManager.UpdateAsync(user);
                 }
             });
@@ -114,7 +131,7 @@ namespace AlterEgo.Controllers
         [HttpGet]
         public async Task<IActionResult> UpdateGuildAccess()
         {
-            await _battleNetApi.UpdateAllUserCharactersAsync();
+            //await _battleNetApi.UpdateAllUserCharactersAsync();
             await _battleNetApi.UpdateGuildRosterAsync();
             await _battleNetApi.UpdateGuildRanksAsync();
 

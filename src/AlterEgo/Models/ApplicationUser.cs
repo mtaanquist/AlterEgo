@@ -10,12 +10,17 @@ namespace AlterEgo.Models
     {
         // Access Token stuff
         public string AccessToken { get; set; }
-        public DateTime AccessTokenExpiry { get; set;}
+        public DateTime AccessTokenExpiry { get; set; }
+        public int FailedTokenValidations { get; set; }
 
         public int Rank { get; set; }
 
         // User Options
         public string LocalTimeZoneInfoId { get; set; } = "Europe/Paris";
+        public string MainCharacterName { get; set; }
+        public string MainCharacterRealm { get; set; }
+        [InverseProperty("MainCharacterUser")]
+        public Character MainCharacter { get; set; }
 
         // Last Activity
         public DateTime RegisteredAt { get; set; }
@@ -31,7 +36,7 @@ namespace AlterEgo.Models
 
         [InverseProperty("User")]
         public List<Character> Characters { get; set; }
-        
+
         [InverseProperty("Author")]
         public List<Thread> AuthoredThreads { get; set; }
 

@@ -37,9 +37,15 @@
                 panelClass += " panel-filled-even";
             }
 
+            var mainCharacterDisplay = "";
+            if (post.Author.MainCharacter != null)
+            {
+                mainCharacterDisplay = $" (<span class=\"class-{post.Author.MainCharacter.CharacterClass.Name.Replace(' ', '-').ToLower()}\">{post.Author.MainCharacterName}</span>)";
+            }
+
             <div class="@Html.Raw(panelClass) post" data-forum-id="@post.Thread.ForumId" data-forum-thread-id="@post.ThreadId" data-forum-post-id="@post.PostId" id="@Html.Raw($"post{post.PostId}")">
                 <div class="panel-heading">
-                    @post.Author, at @TimeZoneInfo.ConvertTime(post.PostedAt, TimeZoneInfo.Utc, TimeZoneInfo.FindSystemTimeZoneById(currentUser.LocalTimeZoneInfoId))
+                    @post.Author@Html.Raw(mainCharacterDisplay), at @TimeZoneInfo.ConvertTime(post.PostedAt, TimeZoneInfo.Utc, TimeZoneInfo.FindSystemTimeZoneById(currentUser.LocalTimeZoneInfoId))
                     <span class="pull-right">
                         <small><a class="anchor" href="#@Html.Raw($"post{post.PostId}")">Post #@postCount</a></small>
                     </span>
